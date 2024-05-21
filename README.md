@@ -39,6 +39,7 @@ return (
         onStampInsert={setStampData}
         onStampClick={printStampLabel}
     />
+)
 ```
 
 ## Exposed handles
