@@ -59,6 +59,10 @@ The following functions can be accessed using the `ref`.
 
 - `placeholder`: The editor displays a placeholder text by default, but you may override it by passing a string to this prop or disable it by passing `false`.
 
+- `toolbarBackgroundColor`: Sets the background color of the toolbar.
+
+- `borderColor`, `borderSize`, `borderStyle`: Sets the color, size and style of the border surrounding the editor as well as the line separating the toolbar from the text area.
+
 ## Credits
 
 This editor was built using [Slate](https://docs.slatejs.org/).
