@@ -4,7 +4,7 @@
   "description": "Made with create-react-library",
   "author": "fortyoneplustwo",
   "license": "MIT",
-  "repository": "fortyoneplustwo/notestamp-editor",
+  "repository": "fortyoneplustwo/notestamp-editor-react",
   "main": "dist/index.js",
   "module": "dist/index.modern.js",
   "source": "src/index.js",
@@ -60,5 +60,20 @@
     "slate": "^0.103.0",
     "slate-history": "^0.100.0",
     "slate-react": "^0.104.0"
-  }
+  },
+  "keywords": [
+    "react",
+    "reactjs",
+    "editor",
+    "text editor",
+    "rich text editor",
+    "notestamp",
+    "notestamp editor",
+    "notestamp text editor",
+    "notestamp rich text editor",
+    "editor timestamps",
+    "timestamp",
+    "text editor stamps",
+    "text editor timestamps"
+  ]
 }
