@@ -40,11 +40,15 @@ const App = () => {
   }
 
   return (
-    <div style={{ margin: '5px', padding: '5px', height: '300px' }}>
+    <div style={{ margin: '5px', padding: '0', height: '300px' }}>
       <Notestamp
+        ref={editorRef}
         onStampInsert={onStampInsert}
         onStampClick={onStampClick}
-        ref={editorRef}
+        borderSize='1px'
+        borderColor='lightgray'
+        borderStyle='solid'
+        toolbarBackgroundColor='whitesmoke'
       />
       <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
         <button onClick={() => setEditorContent(editorRef.current.getJsonContent())}>Capture editor content</button>

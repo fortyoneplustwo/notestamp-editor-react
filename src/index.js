@@ -24,7 +24,7 @@ const HOTKEYS = {
 const LIST_TYPES = ['numbered-list', 'bulleted-list']
 
 export const Notestamp = React.forwardRef((props, ref) => {
-  const { onStampInsert, onStampClick, placeholder } = props
+  const { onStampInsert, onStampClick, placeholder, borderSize, borderStyle, borderColor, toolbarBackgroundColor } = props
   const [internalClipboard, setInternalClipboard] = useState([])
   const defaultPlaceholder = 'Press <Enter> to insert a stamp.\nPress <Shift + Enter> to escape stamping.'
 
@@ -184,33 +184,40 @@ export const Notestamp = React.forwardRef((props, ref) => {
   /* JSX */
 
   return (
-    <SlateReact.Slate
-      editor={editor}
-      initialValue={initialValue}
-    >
-      <div className={styles.textEditorContainer}>
-        <Toolbar>
-          <div className={styles.toolbarBtnContainer}>
-            <MarkButton format='bold' icon='format_bold' description='Bold (Ctrl+B)' />
-            <MarkButton format='italic' icon='format_italic' description='Italic (Ctrl+I)' />
-            <MarkButton format='underline' icon='format_underlined' description='Underline (Ctrl+U)' />
-            <MarkButton format='code' icon='code' description='Code (Ctrl+`)' />
-            <BlockButton format='numbered-list' icon='format_list_numbered' description='Toggle numbered list (Ctrl+Shift+8)' />
-            <BlockButton format='bulleted-list' icon='format_list_bulleted' description='Toggle bulleted list (Ctrl+Shift+9)' />
-          </div>
-        </Toolbar>
-        <Editable
-          className={styles.editor}
-          renderElement={renderElement}
-          renderLeaf={renderLeaf}
-          placeholder={placeholder === false ? '' : placeholder || defaultPlaceholder}
-          spellCheck
-          onCopy={handleCopy}
-          onPaste={handlePaste}
-          onKeyDown={event => onKeyDown(event, onStampInsert, editor)}
-        />
-      </div>
-    </SlateReact.Slate>
+    <div style={{ 
+      backgroundColor: `${toolbarBackgroundColor}`,
+      border: `${borderSize} ${borderStyle} ${borderColor}`,
+      height: '100%'
+    }}>
+      <SlateReact.Slate
+        editor={editor}
+        initialValue={initialValue}
+      >
+        <div className={styles.textEditorContainer}>
+          <Toolbar>
+            <div className={styles.toolbarBtnContainer}>
+              <MarkButton format='bold' icon='format_bold' description='Bold (Ctrl+B)' />
+              <MarkButton format='italic' icon='format_italic' description='Italic (Ctrl+I)' />
+              <MarkButton format='underline' icon='format_underlined' description='Underline (Ctrl+U)' />
+              <MarkButton format='code' icon='code' description='Code (Ctrl+`)' />
+              <BlockButton format='numbered-list' icon='format_list_numbered' description='Toggle numbered list (Ctrl+Shift+8)' />
+              <BlockButton format='bulleted-list' icon='format_list_bulleted' description='Toggle bulleted list (Ctrl+Shift+9)' />
+            </div>
+          </Toolbar>
+          <Editable
+            className={styles.editor}
+            style={{ outline: `${borderSize} ${borderStyle} ${borderColor}` }}
+            renderElement={renderElement}
+            renderLeaf={renderLeaf}
+            placeholder={placeholder === false ? '' : placeholder || defaultPlaceholder}
+            spellCheck
+            onCopy={handleCopy}
+            onPaste={handlePaste}
+            onKeyDown={event => onKeyDown(event, onStampInsert, editor)}
+          />
+        </div>
+      </SlateReact.Slate>
+    </div>
   )
 })
 
