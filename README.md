@@ -38,6 +38,10 @@ return (
     <Notestamp ref={editorRef}
         onStampInsert={setStampData}
         onStampClick={printStampLabel}
+        borderSize='1px'
+        borderColor='lightgray'
+        borderStyle='solid'
+        toolbarBackgroundColor='whitesmoke'
     />
 )
 ```
