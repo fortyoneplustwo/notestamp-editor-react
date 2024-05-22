@@ -27,17 +27,15 @@ const App = () => {
 
   // Define action to take when a stamp is clicked
   const onStampClick = (label, value) => {
-    // Log the data of the stamp that was clicked
-    console.log(`label: ${label}, value: ${value}`)
     // Update our record of the last stamp that was clicked
     setStampData(label)
-    // Log the state of the editor
+    // Log the state of the clicked stamp and the content of the editor
+    console.log(`label: ${label}, value: ${value}`)
     console.log(editorRef.current.getJsonContent())
     console.log(editorRef.current.getHtmlContent())
   }
 
   const changeContent = () => {
-    // Restore the editor's content to the last saved state
     if (editorContent !== null) editorRef.current.setContent(editorContent)
   }
 
