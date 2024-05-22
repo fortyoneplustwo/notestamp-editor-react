@@ -7,7 +7,7 @@
 ## Description
 A rich text editor React component that supports clickable stamps.
 
-A stamp is automatically inserted at the start of a line when the `Enter` key is pressed. You can define an arbitrary value to be stored inside the stamp. Press `Shift + Enter` to insert a new line without inserting a stamp.
+A stamp is automatically inserted at the start of a line when the `Enter` key is pressed. You can define an arbitrary state to be stored inside a stamp.
 
 You may also define an action to be performed when a stamp is clicked.
 
@@ -49,17 +49,17 @@ return (
 ## Exposed handles
 The following functions can be accessed using the `ref`.
 
-- `getJsonContent()`: Returns an array that represents the editor's content (including stamps) in JSON format.
+- `getJsonContent()`: Returns an array that represents the editor's content (stamps included) in JSON format.
 
-- `getHtmlContent()`: Returns a string that represents the editor's content (excluding) stamps in HTML format.
+- `getHtmlContent()`: Returns a string that represents the editor's content (stamps excluded) in HTML format.
 
 - `setContent(newContent)`: Set the editor's content to a JSON value defined by the parameter `newContent`.
 
 ## Props
 
-- `onStampInsert`: A callback function that is executed with argument `dateEnterKeyPressed: Date` when the Enter key is pressed. The function should return an object `{ label: String, value: Any }` where `value` is the state you wish to store inside the stamp and `label` is the actual string to display inside the stamp. If `value` is set to `null`, stamp insertion is aborted.
+- `onStampInsert`: When the Enter key is pressed, this callback function executes with argument `dateEnterKeyPressed: Date`. The return value should be an object `{ label: String, value: Any }` where `value` is the state you want the stamp to hold and `label` is the actual string to display inside the stamp. If `value` is set to `null`, stamp insertion is aborted.
 
-- `onStampClick`: A callback function that is executed with arguments `label String` and `value: Any` when a stamp is clicked. There is no return value.
+- `onStampClick`: A callback function that executes with arguments `label: String` and `value: Any` when a stamp is clicked. There is no return value.
 
 - `placeholder`: The editor displays a placeholder text by default, but you may override it by passing a string to this prop or disable it by passing `false`.
 
