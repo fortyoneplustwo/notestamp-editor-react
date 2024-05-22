@@ -61,7 +61,7 @@ The following functions can be accessed using the `ref`.
 
 ## Credits
 
-This editor was built using [https://docs.slatejs.org/](Slate).
+This editor was built using [Slate](https://docs.slatejs.org/).
 
 ## License
 
