@@ -53,11 +53,11 @@ The following functions can be accessed using the `ref`.
 
 ## Props
 
-- `onStampInsert`: A callback function that is executed when `Enter` is pressed. It contains one argument parameter of type `Date` which logs when the `Enter` key was pressed. The function should return an object `{ label: String, value: Any }`. `value` is the state you want to store inside the stamp and `label` is the string representation of that value which will be displayed inside the stamp. If `value` is set to `null`, stamp insertion is aborted.
+- `onStampInsert`: A callback function that is executed with argument `dateEnterKeyPressed: Date` when the Enter key is pressed. The function should return an object `{ label: String, value: Any }` where `value` is the state you wish to store inside the stamp and `label` is the actual string to display inside the stamp. If `value` is set to `null`, stamp insertion is aborted.
 
-- `onStampClick`: A callback function that is executed when a stamp is clicked. The parameters are `( label, value )` as returned by `onStampInsert`. This function defines the action to perform when a stamp is clicked. There is no return value.
+- `onStampClick`: A callback function that is executed with arguments `label String` and `value: Any` when a stamp is clicked. There is no return value.
 
-- `placeholder`: The editor displays a placeholder text by default, but you may override is by passing a string to this prop or disable it by passing `false`.
+- `placeholder`: The editor displays a placeholder text by default, but you may override it by passing a string to this prop or disable it by passing `false`.
 
 ## Credits
 
