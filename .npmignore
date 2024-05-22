@@ -1,0 +1,32 @@
+# Development files
+src/
+
+# Configuration files
+.babelrc
+.eslintrc
+.prettierrc
+.stylelintrc
+
+# IDE and editor configuration
+.idea/
+.vscode/
+*.sublime-*
+*.suo
+*.ntvs*
+
+# Node.js and npm specific files
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build and distribution files
+build/
+dist/
+*.log
+
+# Git
+.git 
+.gitignore
+
+# Others
+package-lock.json
