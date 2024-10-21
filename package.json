@@ -1,6 +1,6 @@
 {
   "name": "notestamp",
-  "version": "1.0.1",
+  "version": "1.2.3",
   "description": "Made with create-react-library",
   "author": "fortyoneplustwo",
   "license": "MIT",
@@ -24,7 +24,7 @@
     "deploy": "gh-pages -d example/build"
   },
   "peerDependencies": {
-    "react": "^16.0.0"
+    "react": "^18.0.0"
   },
   "devDependencies": {
     "cross-env": "^7.0.2",
@@ -57,6 +57,7 @@
     "@types/react": "^18.3.2",
     "@types/react-dom": "^18.3.0",
     "is-hotkey": "^0.2.0",
+    "material-icons": "^1.13.12",
     "slate": "^0.103.0",
     "slate-history": "^0.100.0",
     "slate-react": "^0.104.0"
@@ -75,5 +76,6 @@
     "timestamp",
     "text editor stamps",
     "text editor timestamps"
-  ]
+  ],
+  "type": "module"
 }

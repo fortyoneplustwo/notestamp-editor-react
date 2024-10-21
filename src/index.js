@@ -1,4 +1,4 @@
-import styles from './styles.module.css'
+import 'material-icons/iconfont/material-icons.css'
 import React, { useMemo, useCallback, useState, useImperativeHandle } from 'react'
 import { isKeyHotkey, isHotkey } from 'is-hotkey'
 import { Editable, withReact, useSlate } from 'slate-react'
@@ -7,13 +7,11 @@ import {
   Editor,
   Transforms,
   createEditor,
-  Text,
   Element as SlateElement,
   Point
 } from 'slate'
 import { withHistory } from 'slate-history'
 import { Toolbar, Button, Icon } from './Toolbar.js'
-import escapeHtml from 'escape-html'
 
 const HOTKEYS = {
   'mod+b': 'bold',
@@ -52,7 +50,19 @@ export const Notestamp = React.forwardRef((props, ref) => {
         onClick={() => {
           onStampClick(element.label, element.value)
         }}
-        className={styles.badge}
+        style={{ 
+          fontFamily: 'Helvetica',
+          fontWeight: 'bold',
+          bacgroundColor: 'transparent',
+          color: 'orangered',
+          textAlign: 'center',
+          paddingRight: '1em',
+          paddingTop: '0',
+          fontSize: '0.65em',
+          cursor: 'pointer',
+          userSelect: 'none',
+          height: '100%',
+        }}
       >
         {children}
         <InlineChromiumBugfix />
@@ -95,11 +105,47 @@ export const Notestamp = React.forwardRef((props, ref) => {
       getJsonContent: () => {
         return editor.children
       },
-      getHtmlContent: () => {
-        return toHtml(editor)
+      getTextContent: () => {
+        Transforms.select(editor, {
+          anchor: Editor.start(editor, []),
+          focus: Editor.end(editor, [])
+        })
+
+        const { selection } = editor
+        if (selection) {
+          const fragment = editor.getFragment()
+
+          // Each item in copiedLines is an array that contains 
+          // the text nodes of a single line
+          const copiedLines = []
+          for (const block of fragment) {
+            if (block.type === 'paragraph') {
+              const line = block.children.map(child => {
+                return child
+              })
+              copiedLines.push(line)
+            } else { // list block
+              for (const listItem of block.children) {
+                const line = listItem.children.map(child => {
+                  return child
+                })
+                copiedLines.push(line)
+              }
+            }
+          }
+
+          // join the copied lines into a single string
+          return copiedLines.reduce((acc, line) => {
+            return acc
+              + (line.reduce((acc, textNode) => {
+                return acc + textNode.text
+              }, ''))
+              + '\n'
+          }, '')
+        }
+        return ""
       },
       setContent: newContent => {
-        // const newNodes = JSON.parse(newContent)
         const newNodes = newContent
         // Select entire content to ensure all nodes get removed
         Transforms.select(editor, {
@@ -181,7 +227,6 @@ export const Notestamp = React.forwardRef((props, ref) => {
     }
   }
 
-  /* JSX */
 
   return (
     <div style={{ 
@@ -193,9 +238,19 @@ export const Notestamp = React.forwardRef((props, ref) => {
         editor={editor}
         initialValue={initialValue}
       >
-        <div className={styles.textEditorContainer}>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+        }}>
           <Toolbar>
-            <div className={styles.toolbarBtnContainer}>
+            <div style={{
+              display: 'flex',
+              flexDirection: 'row',
+              gap: '30px',
+              padding: '10px',
+              height: '100%',
+            }}>
               <MarkButton format='bold' icon='format_bold' description='Bold (Ctrl+B)' />
               <MarkButton format='italic' icon='format_italic' description='Italic (Ctrl+I)' />
               <MarkButton format='underline' icon='format_underlined' description='Underline (Ctrl+U)' />
@@ -205,8 +260,16 @@ export const Notestamp = React.forwardRef((props, ref) => {
             </div>
           </Toolbar>
           <Editable
-            className={styles.editor}
-            style={{ outline: `${borderSize} ${borderStyle} ${borderColor}` }}
+            style={{ 
+              outline: `${borderSize} ${borderStyle} ${borderColor}`,
+              tabSize: '2',
+              background: 'white',
+              color: 'black',
+              height: '100%',
+              padding: '5px',
+              overflow: 'auto',
+              overflowX: 'hidden',
+            }}
             renderElement={renderElement}
             renderLeaf={renderLeaf}
             placeholder={placeholder === false ? '' : placeholder || defaultPlaceholder}
@@ -330,42 +393,6 @@ const onKeyDown = (event, onStampInsert, editor) => {
 
     // * (fix) restore marks
     for (const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true)
-  }
-}
-
-// Recursive algorithm that consumes an editor and returns its text nodes as html
-const toHtml = node => {
-  if (Text.isText(node)) {
-    let string = escapeHtml(node.text)
-    string = string.replace(/\n/g, '<br>')
-    string = string.replace(/\t/g, '&nbsp;&nbsp;')
-    if (node.bold) {
-      string = `<strong>${string}</strong>`
-    } else if (node.italic) {
-      string = `<em>${string}</em>`
-    } else if (node.underline) {
-      string = `<u>${string}</u>`
-    } else if (node.code) {
-      string = `<code>${string}</code>`
-    }
-    return string
-  }
-  const children = node.children.map(n => toHtml(n)).join('')
-  switch (node.type) {
-    case 'quote':
-      return `<blockquote><p>${children}</p></blockquote>`
-    case 'paragraph':
-      return `<p>${children}</p>`
-    case 'link':
-      return `<a href="${escapeHtml(node.url)}">${children}</a>`
-    case 'bulleted-list':
-      return `<ul>${children}</ul>`
-    case 'numbered-list':
-      return `<ol>${children}</ol>`
-    case 'list-item':
-      return `<li>${children}</li>`
-    default:
-      return children
   }
 }
 

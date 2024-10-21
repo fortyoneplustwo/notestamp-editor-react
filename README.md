@@ -51,7 +51,7 @@ The following functions can be accessed using the `ref`.
 
 - `getJsonContent()`: Returns an array that represents the editor's content (stamps included) in JSON format.
 
-- `getHtmlContent()`: Returns a string that represents the editor's content (stamps excluded) in HTML format.
+- `getTextlContent()`: Returns the editor's content as a string (stamps excluded).
 
 - `setContent(newContent)`: Set the editor's content to a JSON value defined by the parameter `newContent`.
 
