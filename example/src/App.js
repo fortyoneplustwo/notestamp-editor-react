@@ -1,22 +1,20 @@
-import React, { useRef, useState } from 'react'
+import React, { useState, useEffect } from 'react'
 
-import { Notestamp } from 'notestamp'
-import 'notestamp/dist/index.css'
-
+import { Notestamp, useEditor } from 'notestamp'
 
 const App = () => {
-  const editorRef = useRef(null)
   const [count, setCount] = useState(0)
   const [editorContent, setEditorContent] = useState(null)
-  const initialEditorContent = [{
-    type: 'paragraph',
-    children: [{ text: '' }]
-  }]
   const [stampData, setStampData] = useState(null)
 
+  const { editor } = useEditor()
+
+  useEffect(() => {
+    handleCaptureEditorContent()
+  }, [])
+
   // Set the label (type: string) and value (type: any) of the new stamp
-  const onStampInsert = dateStampRequested => {
-    console.log(dateStampRequested)
+  const onStampInsert = () => {
     setCount(n => n + 1)
 
     return {
@@ -26,23 +24,22 @@ const App = () => {
   }
 
   // Define action to take when a stamp is clicked
-  const onStampClick = (label, value) => {
-    // Update our record of the last stamp that was clicked
-    setStampData(label)
-    // Log the state of the clicked stamp and the content of the editor
-    console.log(`label: ${label}, value: ${value}`)
-    console.log(editorRef.current.getJsonContent())
-    console.log(editorRef.current.getHtmlContent())
+  const onStampClick = (label, _) => setStampData(label)
+
+  // Save the current content of the editor
+  const handleCaptureEditorContent = () => {
+    setEditorContent(editor.getChildren())
   }
 
-  const changeContent = () => {
-    if (editorContent !== null) editorRef.current.setContent(editorContent)
+  // Set editor's content to the previously saved contents
+  const handleRestoreEditorContent = () => {
+    editorContent && editor.setChildren(editorContent)
   }
 
   return (
     <div style={{ margin: '5px', padding: '0', height: '300px' }}>
       <Notestamp
-        ref={editorRef}
+        editor={editor}
         onStampInsert={onStampInsert}
         onStampClick={onStampClick}
         borderSize='1px'
@@ -51,12 +48,20 @@ const App = () => {
         toolbarBackgroundColor='whitesmoke'
       />
       <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-        <button onClick={() => setEditorContent(editorRef.current.getJsonContent())}>Capture editor content</button>
-        <button onClick={changeContent}>Restore last captured content</button>
-        <button onClick={() => editorRef.current.setContent(initialEditorContent)}>Clear editor</button>
+        <button onClick={handleCaptureEditorContent}>
+          Capture editor content
+        </button>
+        <button onClick={handleRestoreEditorContent}>
+          Restore last captured content
+        </button>
+        <button 
+          onClick={editor.clear}>
+          Clear editor
+        </button>
       </div>
-      <pre style={{ marginTop: '10px' }}>{ `Last stamp clicked: ${stampData}` }</pre>
-
+      <pre style={{ marginTop: '10px' }}>
+        { `Last stamp clicked: ${stampData}` }
+      </pre>
     </div>
   )
 }

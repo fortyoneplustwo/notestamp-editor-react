@@ -1,35 +1,47 @@
 import 'material-icons/iconfont/material-icons.css'
-import React, { useMemo, useCallback, useState, useImperativeHandle } from 'react'
-import { isKeyHotkey, isHotkey } from 'is-hotkey'
-import { Editable, withReact, useSlate } from 'slate-react'
+import React, { useMemo, useCallback } from 'react'
+import { isHotkey } from 'is-hotkey'
+import { Editable, useSlate } from 'slate-react'
 import * as SlateReact from 'slate-react'
 import {
   Editor,
   Transforms,
-  createEditor,
   Element as SlateElement,
-  Point
+  Point,
+  Node
 } from 'slate'
-import { withHistory } from 'slate-history'
-import { Toolbar, Button, Icon } from './Toolbar.js'
+import { Toolbar, Button, Icon } from './Toolbar'
+import { useEditor } from './hooks/useEditor'
 
-const HOTKEYS = {
+const markButtonHotkeys = {
   'mod+b': 'bold',
   'mod+i': 'italic',
   'mod+u': 'underline',
-  'mod+`': 'code'
+  'mod+`': 'code',
 }
+
+const blockButtonHotkeys = {
+  'mod+shift+8': 'numbered-list',
+  'mod+shift+9': 'bulleted-list',
+}
+
 const LIST_TYPES = ['numbered-list', 'bulleted-list']
 
-export const Notestamp = React.forwardRef((props, ref) => {
-  const { onStampInsert, onStampClick, placeholder, borderSize, borderStyle, borderColor, toolbarBackgroundColor } = props
-  const [internalClipboard, setInternalClipboard] = useState([])
+const Notestamp = ({
+  editor,
+  onStampInsert,
+  onStampClick,
+  placeholder,
+  borderSize,
+  borderStyle,
+  borderColor,
+  toolbarBackgroundColor,
+  onChange,
+}) => {
   const defaultPlaceholder = 'Press <Enter> to insert a stamp.\nPress <Shift + Enter> to escape stamping.'
 
   const renderElement = useCallback(props => <Element {...props} />, [])
   const renderLeaf = useCallback(props => <Leaf {...props} />, [])
-
-  const editor = useMemo(() => withInlines(withReact(withHistory(createEditor()))), [])
 
   const initialValue = useMemo(
     () =>
@@ -100,133 +112,42 @@ export const Notestamp = React.forwardRef((props, ref) => {
     }
   }
 
-  useImperativeHandle(ref, () => {
-    return {
-      getJsonContent: () => {
-        return editor.children
-      },
-      getTextContent: () => {
-        Transforms.select(editor, {
-          anchor: Editor.start(editor, []),
-          focus: Editor.end(editor, [])
-        })
-
-        const { selection } = editor
-        if (selection) {
-          const fragment = editor.getFragment()
-
-          // Each item in copiedLines is an array that contains 
-          // the text nodes of a single line
-          const copiedLines = []
-          for (const block of fragment) {
-            if (block.type === 'paragraph') {
-              const line = block.children.map(child => {
-                return child
-              })
-              copiedLines.push(line)
-            } else { // list block
-              for (const listItem of block.children) {
-                const line = listItem.children.map(child => {
-                  return child
-                })
-                copiedLines.push(line)
-              }
-            }
-          }
-
-          // join the copied lines into a single string
-          return copiedLines.reduce((acc, line) => {
-            return acc
-              + (line.reduce((acc, textNode) => {
-                return acc + textNode.text
-              }, ''))
-              + '\n'
-          }, '')
+  const dispatchKeyEvent = (event) => {
+    switch (event.key) {
+      case "Tab":
+        event.preventDefault()
+        handleInsertTab(event, editor)
+        break
+      case "Enter":
+        if (event.shiftKey) {
+          event.preventDefault()
+          handleEscapeStamp(editor)
+        } else {
+          event.preventDefault()
+          handleInsertStamp(onStampInsert, editor)
         }
-        return ""
-      },
-      setContent: newContent => {
-        const newNodes = newContent
-        // Select entire content to ensure all nodes get removed
-        Transforms.select(editor, {
-          anchor: Editor.start(editor, []),
-          focus: Editor.end(editor, [])
-        })
-        Transforms.unwrapNodes(editor)
-        Transforms.removeNodes(editor)
-        Transforms.insertNodes(editor, newNodes)
-      }
-    }
-  }, [editor])
-
-  // Copy nodes to editor clipboard and text to device clipboard
-  const handleCopy = event => {
-    event.preventDefault()
-    const { selection } = editor
-    if (selection) {
-      const fragment = editor.getFragment()
-
-      // Each item in copiedLines is an array that contains the text nodes of a single line
-      const copiedLines = []
-      for (const block of fragment) {
-        if (block.type === 'paragraph') {
-          const line = block.children.map(child => {
-            return child
-          })
-          copiedLines.push(line)
-        } else { // list block
-          for (const listItem of block.children) {
-            const line = listItem.children.map(child => {
-              return child
-            })
-            copiedLines.push(line)
+        break
+      case "Backspace":
+        handleBackspace(editor, event)
+        break
+      default:
+        for (let hotkey in markButtonHotkeys) {
+          if (isHotkey(hotkey, event)) {
+            event.preventDefault()
+            toggleMark(editor, markButtonHotkeys[hotkey])
+            return
           }
         }
-      }
 
-      // join the copied lines into a single string
-      const copiedLinesToString = copiedLines.reduce((acc, line) => {
-        return acc
-          + (line.reduce((acc, textNode) => {
-            return acc + textNode.text
-          }, ''))
-          + '\n'
-      }, '')
-
-      event.clipboardData.setData('text/plain', copiedLinesToString)
-      setInternalClipboard(copiedLines)
+        for (let hotkey in blockButtonHotkeys) {
+          if (isHotkey(hotkey, event)) {
+            event.preventDefault()
+            toggleBlock(editor, blockButtonHotkeys[hotkey])
+            return
+          }
+        }
     }
   }
-
-  // Paste nodes from editor clipboard if content of editor and device clipboard are equal
-  // Otherwise paste contents of device clipboard
-  const handlePaste = event => {
-    event.preventDefault()
-
-    // convert editor clipboard to string
-    const internalClipboardToText = internalClipboard.reduce((acc, line) => {
-      return acc
-        + (line.reduce((acc, textNode) => {
-          return acc + textNode.text
-        }, ''))
-        + '\n'
-    }, '')
-
-    const deviceClipboardData = event.clipboardData.getData('Text')
-    if (internalClipboardToText === deviceClipboardData) {
-      for (let i = 0; i < internalClipboard.length; i++) {
-        for (const textNode of internalClipboard[i]) {
-          Transforms.insertNodes(editor, { ...textNode })
-        }
-        if (i < internalClipboard.length - 1) {
-          Transforms.insertNodes(editor, { text: '\n' })
-        }
-      }
-    } else {
-      Transforms.insertText(editor, deviceClipboardData.toString())
-    }
-  }
-
 
   return (
     <div style={{ 
@@ -237,6 +158,12 @@ export const Notestamp = React.forwardRef((props, ref) => {
       <SlateReact.Slate
         editor={editor}
         initialValue={initialValue}
+        onChange={(value) => {
+          const isAstChange = editor.operations.some(
+            op => 'set_selection' !== op.type
+          )
+          isAstChange && onChange && onChange(value)
+        }}
       >
         <div style={{
           display: 'flex',
@@ -251,12 +178,36 @@ export const Notestamp = React.forwardRef((props, ref) => {
               padding: '10px',
               height: '100%',
             }}>
-              <MarkButton format='bold' icon='format_bold' description='Bold (Ctrl+B)' />
-              <MarkButton format='italic' icon='format_italic' description='Italic (Ctrl+I)' />
-              <MarkButton format='underline' icon='format_underlined' description='Underline (Ctrl+U)' />
-              <MarkButton format='code' icon='code' description='Code (Ctrl+`)' />
-              <BlockButton format='numbered-list' icon='format_list_numbered' description='Toggle numbered list (Ctrl+Shift+8)' />
-              <BlockButton format='bulleted-list' icon='format_list_bulleted' description='Toggle bulleted list (Ctrl+Shift+9)' />
+              <MarkButton 
+                format='bold' 
+                icon='format_bold' 
+                description='Bold (Ctrl+B)' 
+              />
+              <MarkButton 
+                format='italic' 
+                icon='format_italic' 
+                description='Italic (Ctrl+I)' 
+              />
+              <MarkButton 
+                format='underline' 
+                icon='format_underlined' 
+                description='Underline (Ctrl+U)' 
+              />
+              <MarkButton 
+                format='code' 
+                icon='code' 
+                description='Code (Ctrl+`)' 
+              />
+              <BlockButton 
+                format='numbered-list' 
+                icon='format_list_numbered' 
+                description='Toggle numbered list (Ctrl+Shift+8)' 
+              />
+              <BlockButton 
+                format='bulleted-list' 
+                icon='format_list_bulleted' 
+                description='Toggle bulleted list (Ctrl+Shift+9)' 
+              />
             </div>
           </Toolbar>
           <Editable
@@ -274,126 +225,111 @@ export const Notestamp = React.forwardRef((props, ref) => {
             renderLeaf={renderLeaf}
             placeholder={placeholder === false ? '' : placeholder || defaultPlaceholder}
             spellCheck
-            onCopy={handleCopy}
-            onPaste={handlePaste}
-            onKeyDown={event => onKeyDown(event, onStampInsert, editor)}
+            onCopy={editor.handleCopy}
+            onPaste={editor.handlePaste}
+            onKeyDown={dispatchKeyEvent}
           />
         </div>
       </SlateReact.Slate>
     </div>
   )
-})
+}
 
 /* Functions */
-
-// Keyboard events
-const onKeyDown = (event, onStampInsert, editor) => {
-  const { nativeEvent } = event
-  // Handle formatting hotkeys. TODO reimplement this. it's really slow
-  for (const hotkey in HOTKEYS) {
-    if (isHotkey(hotkey, event)) {
-      event.preventDefault()
-      const mark = HOTKEYS[hotkey]
-      toggleMark(editor, mark)
-    }
-  }
-
-  if (isHotkey('tab', nativeEvent)) {
+const handleInsertTab = (event, editor) => {
     event.preventDefault()
     const marks = Editor.marks(editor)
     Transforms.insertText(editor, '\t')
-    for (const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true)
-  } else if (isHotkey('shift+enter', nativeEvent)) {
-    event.preventDefault()
-    const { selection } = editor
-    const startPath = Editor.start(editor, selection)
-    const [block] = Editor.parent(editor, startPath)
-    const marks = Editor.marks(editor) // *
+    for(const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true)
+    return
+}
+
+const handleInsertStamp = (getStampData, editor) => {
+  const { label, value } = getStampData(new Date())
+
+  // Get the block that wraps our current selection
+  const { selection } = editor
+  const startPath = Editor.start(editor, selection)
+  const [block] = Editor.parent(editor, startPath)
+
+  const marks = Editor.marks(editor) // Save marks applied on current selection
+  
+  // Abort insertion of stamp if stamp value is null
+  if (value === null) { 
     Transforms.insertNodes(editor, { ...block, children: [{ text: '' }] })
-    for (const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true)
-  } else if (isHotkey('mod+shift+8', nativeEvent)) {
-    event.preventDefault()
-    toggleBlock(editor, 'numbered-list')
-  } else if (isHotkey('mod+shift+9', nativeEvent)) {
-    event.preventDefault()
-    toggleBlock(editor, 'bulleted-list')
-  } else if (isKeyHotkey('backspace', nativeEvent)) {
-    // Get the block that wraps our current selection
-    const { selection } = editor
-    const startPath = Editor.start(editor, selection)
-    const [block] = Editor.parent(editor, startPath)
+    for (const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true) 
+    return 
+  } 
 
-    if (selection.isFocused && Point.compare(selection.anchor, selection.focus)) return
+  // If current block contains either a stamp node or a non-empty text node
+  // then insert a block of similar type with an empty text node
+  const stampFound = block.children.reduce(
+    (accumulator, node) => {
+      return accumulator || ('type' in node ? node.type === 'stamp' : false)
+    },
+    false
+  )
+  const textNode = block.children[block.children.length - 1]
+  if (stampFound || textNode.text !== '') {
+    Transforms.insertNodes(editor, { ...block, children: [{ text: '' }] })
+  }
 
-    // Fix: manually delete empty block to make sure caret appears at the
-    // end of previous block after delete operation
-    // Make sure not to delete last remaining block
-    if (editor.children.length > 1
-      || (editor.children.length === 1
-        && block.type === 'list-item'
-        && editor.children[0].children.length > 1)) {
-      if (block.children.length === 1 && block.children[0].text === '') {
-        event.preventDefault()
-        Transforms.removeNodes(editor, { at: startPath })
-      }
-    }
-  } else if (isKeyHotkey('enter', nativeEvent)) {
-    const { label, value } = onStampInsert(new Date())
-    event.preventDefault()
+  // Proceed with stamp insertion
+  const caretPathBeforeInsert = editor.selection.focus.path
+  Transforms.insertNodes(editor, {
+    type: 'stamp', 
+    label: label, 
+    value: value,
+    children: [{ text: '' }] 
+  })
 
-    // Get the block that wraps our current selection
-    const { selection } = editor
-    const startPath = Editor.start(editor, selection)
-    const [block] = Editor.parent(editor, startPath)
-
-    // save marks on current selection
-    const marks = Editor.marks(editor) // *
-
-    // abort insertion of stamp if stamp value is null
-    if (value === null) {
-      Transforms.insertNodes(editor, { ...block, children: [{ text: '' }] })
-      for (const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true)
-      return
-    }
-
-    // If current block contains either a stamp node or a non-empty text node,
-    // then insert a block of similar type with an empty text node
-    const stampFound = block.children.reduce(
-      (accumulator, node) => {
-        return accumulator || ('type' in node ? node.type === 'stamp' : false)
-      },
-      false
-    )
-    const textNode = block.children[block.children.length - 1]
-    if (stampFound || textNode.text !== '') {
-      Transforms.insertNodes(editor, { ...block, children: [{ text: '' }] })
-    }
-
-    // Proceed with stamp insertion
-    const caretPathBeforeInsert = editor.selection.focus.path // **
-    Transforms.insertNodes(editor, {
-      type: 'stamp',
-      label: label,
-      value: value,
-      children: [{ text: '' }]
-    })
-
-    // ** (fix) After insertion the caret mysteriously disappears.
-    // Force caret position to after newly inserted node.
-    const path = [...caretPathBeforeInsert]
-    path[path.length - 1] = caretPathBeforeInsert[path.length - 1] + 2
-    const caretPathAfterInsert = {
-      path: path, offset: 0
-    }
-
-    Transforms.select(editor, ({
+  // Fix: After insertion the caret mysteriously disappears.
+  // Force caret position to be positioned after the newly inserted node.
+  const path = [...caretPathBeforeInsert]
+  path[path.length-1] = caretPathBeforeInsert[path.length-1] + 2
+  const caretPathAfterInsert = {
+    path: path, offset: 0
+  }
+  Transforms.select(editor, ({
       anchor: caretPathAfterInsert,
       focus: caretPathAfterInsert
-    }))
+    }
+  ))
 
-    // * (fix) restore marks
-    for (const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true)
+  // Fix: restore marks
+  for (const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true) 
+  return
+}
+
+const handleBackspace = (editor, event) => {
+  const { selection } = editor
+  const startPath = Editor.start(editor, selection)
+  const [block, blockPath] = Editor.parent(editor, startPath)
+
+  if (Point.compare(selection.anchor, selection.focus)) return
+
+  // Fix: Programatically delete an empty block to make sure caret appears at
+  // the end of the previous block after deletion, but do not delete
+  // the empty block if the editor has only one child block.
+  if (editor.children.length > 1 
+    || (editor.children.length === 1 
+      && Node.parent(editor, blockPath)?.children.length > 1)) {
+    if (block.children.length === 1 && block.children[0].text === '') {
+      event.preventDefault()
+      Transforms.removeNodes(editor, { at: startPath }) 
+    }
   }
+}
+
+const handleEscapeStamp = (editor) => {
+  const { selection } = editor
+  const startPath = Editor.start(editor, selection);
+  const [block] = Editor.parent(editor, startPath)
+  const marks = Editor.marks(editor) // Save marks
+  Transforms.insertNodes(editor, { ...block, children: [{ text: '' }] })
+  // Fix: Restore marks
+  for (const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true) 
+  return 
 }
 
 const toggleBlock = (editor, format) => {
@@ -452,26 +388,6 @@ const isBlockActive = (editor, format, blockType = 'type') => {
 const isMarkActive = (editor, format) => {
   const marks = Editor.marks(editor)
   return marks ? marks[format] === true : false
-}
-
-// Returns an editor that supports inline elements
-const withInlines = editor => {
-  const {
-    isVoid,
-    isInline,
-    isElementReadOnly,
-    isSelectable
-  } = editor
-  // overriding these methods to define stamp behaviour
-  editor.isVoid = element =>
-    ['stamp'].includes(element.type) || isVoid(element)
-  editor.isInline = element =>
-    ['stamp'].includes(element.type) || isInline(element)
-  editor.isElementReadOnly = element =>
-    element.type === 'stamp' || isElementReadOnly(element)
-  editor.isSelectable = element =>
-    element.type !== 'stamp' && isSelectable(element)
-  return editor
 }
 
 /* Components */
@@ -554,4 +470,4 @@ const InlineChromiumBugfix = () => (
   </span>
 )
 
-// export default Notestamp
+export { Notestamp, useEditor }
