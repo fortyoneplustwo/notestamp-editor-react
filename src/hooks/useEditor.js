@@ -3,18 +3,19 @@ import { createEditor, Node, Transforms, Editor, Element as SlateElement } from 
 import { withHistory } from 'slate-history'
 import { withReact } from 'slate-react'
 import { withSplitBlocksAtNewLines } from '../plugins/withSplitBlocksAtNewLines'
-import { withInlineStamps } from '../plugins/withInlines'
+import { withStamps } from '../plugins/withStamps'
 import { getLines, linesToString } from '../utils/lines'
 
-export const useEditor = () => {
+export const useEditor = (props) => {
   const [internalClipboard, setInternalClipboard] = useState([])
+  
 
   const editor = useMemo(() => 
-    withSplitBlocksAtNewLines(
-      withInlineStamps(
+    withStamps(
+      withSplitBlocksAtNewLines(
         withReact(
           withHistory(
-            createEditor())))), [])
+            createEditor()))), props), [])
 
   editor.getChildren = () => editor.children
 

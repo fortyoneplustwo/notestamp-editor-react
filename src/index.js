@@ -12,6 +12,7 @@ import {
 } from 'slate'
 import { Toolbar, Button, Icon } from './Toolbar'
 import { useEditor } from './hooks/useEditor'
+import { withStamps } from './plugins/withStamps'
 
 const markButtonHotkeys = {
   'mod+b': 'bold',
@@ -28,15 +29,15 @@ const blockButtonHotkeys = {
 const LIST_TYPES = ['numbered-list', 'bulleted-list']
 
 const Notestamp = ({
-  editor,
-  onStampInsert,
-  onStampClick,
+  editor: baseEditor,
   placeholder,
   borderSize,
   borderStyle,
   borderColor,
   toolbarBackgroundColor,
   onChange,
+  onStampInsert,
+  onStampClick,
 }) => {
   const defaultPlaceholder = 'Press <Enter> to insert a stamp.\nPress <Shift + Enter> to escape stamping.'
 
@@ -54,39 +55,16 @@ const Notestamp = ({
     []
   )
 
-  const Stamp = ({ attributes, children, element }) => {
-    return (
-      <span
-        {...attributes}
-        contentEditable={false}
-        onClick={() => {
-          onStampClick(element.label, element.value)
-        }}
-        style={{ 
-          fontFamily: 'Helvetica',
-          fontWeight: 'bold',
-          bacgroundColor: 'transparent',
-          color: 'orangered',
-          textAlign: 'center',
-          paddingRight: '1em',
-          paddingTop: '0',
-          fontSize: '0.65em',
-          cursor: 'pointer',
-          userSelect: 'none',
-          height: '100%',
-        }}
-      >
-        {children}
-        <InlineChromiumBugfix />
-        {element.label}
-        <InlineChromiumBugfix />
-      </span>
-    )
-  }
+  const editor = useMemo(() => 
+    withStamps(baseEditor, onStampInsert, onStampClick),
+    [onStampInsert, onStampClick])
 
   const Element = props => {
     const { children, element, attributes } = props
     switch (element.type) {
+      case 'stamped-item':
+        const { StampedBlock } = editor
+        return <StampedBlock {...props} />
       case 'stamp':
         return <Stamp {...props} />
       case 'bulleted-list':
@@ -123,13 +101,14 @@ const Notestamp = ({
           event.preventDefault()
           handleEscapeStamp(editor)
         } else {
-          event.preventDefault()
-          handleInsertStamp(onStampInsert, editor)
+          // event.preventDefault()
+          // handleInsertStamp(onStampInsert, editor)
+          return
         }
         break
-      case "Backspace":
-        handleBackspace(editor, event)
-        break
+      // case "Backspace":
+      //   handleBackspace(editor, event)
+      //   break
       default:
         for (let hotkey in markButtonHotkeys) {
           if (isHotkey(hotkey, event)) {
@@ -391,7 +370,6 @@ const isMarkActive = (editor, format) => {
 }
 
 /* Components */
-
 const BlockButton = ({ format, icon, description }) => {
   const editor = useSlate()
   return (
@@ -429,12 +407,12 @@ const MarkButton = ({ format, icon, description }) => {
 
 const Paragraph = ({ attributes, children }) => {
   return (
-    <p
+    <div
       {...attributes}
-      style={{ margin: '0', padding: '0' }}
+      style={{ margin: '0', padding: '0', contentEditable: 'true' }}
     >
       {children}
-    </p>
+    </div>
   )
 }
 
