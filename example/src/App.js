@@ -8,6 +8,9 @@ const App = () => {
 
   const setStampData = useCallback(() => {
     setCount(c => c + 1)
+    if (count % 5 === 0) {
+      return null
+    }
     return { label: count.toString(), value: count }
   }, [count])
 
