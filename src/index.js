@@ -37,8 +37,6 @@ const Notestamp = ({
   onStampInsert,
   onStampClick,
 }) => {
-  const defaultPlaceholder = 'Press <Enter> to insert a stamp.\nPress <Shift + Enter> to escape stamping.'
-
   const renderElement = useCallback(props => <Element {...props} />, [])
   const renderLeaf = useCallback(props => <Leaf {...props} />, [])
 
@@ -54,11 +52,9 @@ const Notestamp = ({
   const Element = props => {
     const { children, element, attributes } = props
     switch (element.type) {
-      case editor.stampedBlockType:
-        const { StampedBlock } = editor
-        return <StampedBlock {...props} />
-      case 'stamp':
-        return <Stamp {...props} />
+      case editor.stampedElementType:
+        const { StampedElementComponent } = editor
+        return <StampedElementComponent {...props} />
       case 'bulleted-list':
         return (
           <ul {...attributes}>
@@ -181,7 +177,7 @@ const Notestamp = ({
             }}
             renderElement={renderElement}
             renderLeaf={renderLeaf}
-            placeholder={placeholder === false ? '' : placeholder || defaultPlaceholder}
+            placeholder={placeholder ?? ''}
             spellCheck
             onCopy={editor.handleCopy}
             onPaste={editor.handlePaste}
