@@ -7,8 +7,6 @@ import {
   Editor,
   Transforms,
   Element as SlateElement,
-  Point,
-  Node
 } from 'slate'
 import { Toolbar, Button, Icon } from './Toolbar'
 import { useEditor } from './hooks/useEditor'
@@ -44,16 +42,10 @@ const Notestamp = ({
   const renderElement = useCallback(props => <Element {...props} />, [])
   const renderLeaf = useCallback(props => <Leaf {...props} />, [])
 
-  const initialValue = useMemo(
-    () =>
-      [
-        {
-          type: 'paragraph',
-          children: [{ text: '' }]
-        }
-      ],
-    []
-  )
+  const initialValue = useMemo(() => [{
+    type: 'paragraph',
+    children: [{ text: '' }]
+  }], [])
 
   const editor = useMemo(() => 
     withStamps(baseEditor, onStampInsert, onStampClick),
@@ -62,7 +54,7 @@ const Notestamp = ({
   const Element = props => {
     const { children, element, attributes } = props
     switch (element.type) {
-      case 'stamped-item':
+      case editor.stampedBlockType:
         const { StampedBlock } = editor
         return <StampedBlock {...props} />
       case 'stamp':
@@ -96,19 +88,6 @@ const Notestamp = ({
         event.preventDefault()
         handleInsertTab(event, editor)
         break
-      case "Enter":
-        if (event.shiftKey) {
-          event.preventDefault()
-          handleEscapeStamp(editor)
-        } else {
-          // event.preventDefault()
-          // handleInsertStamp(onStampInsert, editor)
-          return
-        }
-        break
-      // case "Backspace":
-      //   handleBackspace(editor, event)
-      //   break
       default:
         for (let hotkey in markButtonHotkeys) {
           if (isHotkey(hotkey, event)) {
@@ -221,94 +200,6 @@ const handleInsertTab = (event, editor) => {
     Transforms.insertText(editor, '\t')
     for(const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true)
     return
-}
-
-const handleInsertStamp = (getStampData, editor) => {
-  const { label, value } = getStampData(new Date())
-
-  // Get the block that wraps our current selection
-  const { selection } = editor
-  const startPath = Editor.start(editor, selection)
-  const [block] = Editor.parent(editor, startPath)
-
-  const marks = Editor.marks(editor) // Save marks applied on current selection
-  
-  // Abort insertion of stamp if stamp value is null
-  if (value === null) { 
-    Transforms.insertNodes(editor, { ...block, children: [{ text: '' }] })
-    for (const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true) 
-    return 
-  } 
-
-  // If current block contains either a stamp node or a non-empty text node
-  // then insert a block of similar type with an empty text node
-  const stampFound = block.children.reduce(
-    (accumulator, node) => {
-      return accumulator || ('type' in node ? node.type === 'stamp' : false)
-    },
-    false
-  )
-  const textNode = block.children[block.children.length - 1]
-  if (stampFound || textNode.text !== '') {
-    Transforms.insertNodes(editor, { ...block, children: [{ text: '' }] })
-  }
-
-  // Proceed with stamp insertion
-  const caretPathBeforeInsert = editor.selection.focus.path
-  Transforms.insertNodes(editor, {
-    type: 'stamp', 
-    label: label, 
-    value: value,
-    children: [{ text: '' }] 
-  })
-
-  // Fix: After insertion the caret mysteriously disappears.
-  // Force caret position to be positioned after the newly inserted node.
-  const path = [...caretPathBeforeInsert]
-  path[path.length-1] = caretPathBeforeInsert[path.length-1] + 2
-  const caretPathAfterInsert = {
-    path: path, offset: 0
-  }
-  Transforms.select(editor, ({
-      anchor: caretPathAfterInsert,
-      focus: caretPathAfterInsert
-    }
-  ))
-
-  // Fix: restore marks
-  for (const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true) 
-  return
-}
-
-const handleBackspace = (editor, event) => {
-  const { selection } = editor
-  const startPath = Editor.start(editor, selection)
-  const [block, blockPath] = Editor.parent(editor, startPath)
-
-  if (Point.compare(selection.anchor, selection.focus)) return
-
-  // Fix: Programatically delete an empty block to make sure caret appears at
-  // the end of the previous block after deletion, but do not delete
-  // the empty block if the editor has only one child block.
-  if (editor.children.length > 1 
-    || (editor.children.length === 1 
-      && Node.parent(editor, blockPath)?.children.length > 1)) {
-    if (block.children.length === 1 && block.children[0].text === '') {
-      event.preventDefault()
-      Transforms.removeNodes(editor, { at: startPath }) 
-    }
-  }
-}
-
-const handleEscapeStamp = (editor) => {
-  const { selection } = editor
-  const startPath = Editor.start(editor, selection);
-  const [block] = Editor.parent(editor, startPath)
-  const marks = Editor.marks(editor) // Save marks
-  Transforms.insertNodes(editor, { ...block, children: [{ text: '' }] })
-  // Fix: Restore marks
-  for (const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true) 
-  return 
 }
 
 const toggleBlock = (editor, format) => {
@@ -436,16 +327,5 @@ const Leaf = props => {
     </span>
   )
 }
-
-// Put this at the start and end of an inline component to work around this Chromium bug:
-// https://bugs.chromium.org/p/chromium/issues/detail?id=1249405
-const InlineChromiumBugfix = () => (
-  <span
-    contentEditable={false}
-    style={{ fontSize: 0 }}
-  >
-    {String.fromCodePoint(160) /* Non-breaking space */}
-  </span>
-)
 
 export { Notestamp, useEditor }
