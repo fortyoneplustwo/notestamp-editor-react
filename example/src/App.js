@@ -7,6 +7,7 @@ const App = () => {
   const [count, setCount] = useState(0)
 
   const setStampData = useCallback(() => {
+    console.log(count)
     setCount(c => c + 1)
     if (count % 5 === 0) {
       return null
@@ -18,15 +19,14 @@ const App = () => {
 
   const { editor } = useEditor()
 
+  // Save the current content of the editor
+  const handleCaptureEditorContent = useCallback(() => {
+    setEditorContent(editor.getChildren())
+  }, [editor])
+  
   useEffect(() => {
     handleCaptureEditorContent()
-  }, [])
-
-
-  // Save the current content of the editor
-  const handleCaptureEditorContent = () => {
-    setEditorContent(editor.getChildren())
-  }
+  }, [handleCaptureEditorContent])
 
   // Set editor's content to the previously saved contents
   const handleRestoreEditorContent = () => {

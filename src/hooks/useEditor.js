@@ -1,21 +1,16 @@
 import { useState, useMemo } from 'react'
-import { createEditor, Node, Transforms, Editor, Element as SlateElement } from 'slate'
+import { createEditor, Node, Transforms, Editor, Element as SlateElement, Path, Range, Point } from 'slate'
 import { withHistory } from 'slate-history'
 import { withReact } from 'slate-react'
-import { withSplitBlocksAtNewLines } from '../plugins/withSplitBlocksAtNewLines'
-import { withStamps } from '../plugins/withStamps'
 import { getLines, linesToString } from '../utils/lines'
 
 export const useEditor = (props) => {
   const [internalClipboard, setInternalClipboard] = useState([])
-  
 
   const editor = useMemo(() => 
-    withStamps(
-      withSplitBlocksAtNewLines(
-        withReact(
-          withHistory(
-            createEditor()))), props), [])
+    withReact(
+      withHistory(
+        createEditor())), [])
 
   editor.getChildren = () => editor.children
 
@@ -59,26 +54,81 @@ export const useEditor = (props) => {
 
   editor.handlePaste = (event) => {
     event?.preventDefault()
+
+    const { selection } = editor
+    if (Range.isExpanded(selection)) editor.deleteFragment()
+
     const internalClipboardToString = linesToString(internalClipboard)
     const deviceClipboardData = event.clipboardData.getData('Text')
     if (internalClipboardToString !== deviceClipboardData) {
       Transforms.insertText(editor, deviceClipboardData.toString())
+      return // TODO: add this return statement to main
     }
 
-    const { selection } = editor
-    const enclosingBlockEntry = Editor.above(editor, {
-      at: selection.anchor,
-      match: (n) => Editor.isBlock(editor, n) && SlateElement.isElement(n)
+    let match = Editor.above(editor, {
+      match: (n) => 
+        !Editor.isEditor(n) &&
+          SlateElement.isElement(n) &&
+          Editor.isBlock(editor, n) && 
+          n.type !== editor.stampedElementType
     })
-    if (!enclosingBlockEntry) return
-    const [enclosingBlock] = enclosingBlockEntry
+    if (!match) return
+    const [closestNonStampedAncestor, closestNonStampedAncestorPath] = match
+
+    match = Editor.above(editor, {
+      match: (n) =>
+        Editor.isBlock(editor, n) &&
+          SlateElement.isElement(n) &&
+          n.type === editor.stampedElementType
+    })
+    let stampedBlock, stampedBlockPath
+    if (match) [stampedBlock, stampedBlockPath] = match
+
     const [first, ...rest] = internalClipboard
+    const nodesRest = rest.map(line => { 
+      return { 
+        type: closestNonStampedAncestor.type,
+        children: !match
+          ? line
+          : [{ ...stampedBlock, children: line }]
+      }
+    })
+
     Transforms.insertNodes(editor, first)
-    for (const line of rest) {
-      Transforms.insertNodes(editor, {
-        type: enclosingBlock.type,
-        children: line
+
+    const isSelectionAtEndOfLine = Point.equals(
+      editor.selection.anchor,
+      Editor.end(editor, match ? stampedBlockPath : closestNonStampedAncestorPath)
+    )
+    if (!isSelectionAtEndOfLine && rest.length > 0) {
+      Transforms.splitNodes(editor)
+      if (match) {
+        Transforms.moveNodes(editor, {
+          at: Path.next(stampedBlockPath),
+          to: Path.next(closestNonStampedAncestorPath)
+        })
+        Transforms.wrapNodes(
+          editor, 
+          { type: closestNonStampedAncestor.type }, 
+          { at: Path.next(closestNonStampedAncestorPath) }
+        )
+      }
+    }
+
+    let path = closestNonStampedAncestorPath
+    for (let i = 0; i < nodesRest.length; i++) {
+      const node = nodesRest[i]
+      if (i === nodesRest.length - 1 && !isSelectionAtEndOfLine) {
+        Transforms.insertNodes(editor, rest[i], {
+          at: Editor.start(editor, Path.next(path))
+        })
+      }
+      Transforms.insertNodes(editor, node, { at: Path.next(path) })
+      Transforms.setSelection(editor, {
+        anchor: Editor.end(editor, Path.next(path)),
+        focus: Editor.end(editor, Path.next(path)),
       })
+      path = Path.next(path)
     }
   }
 

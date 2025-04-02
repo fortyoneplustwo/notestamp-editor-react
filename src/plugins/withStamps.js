@@ -1,10 +1,10 @@
 import React from 'react'
-import { Editor, Transforms, Element, Range, Node, Path, Point } from "slate"
+import { Editor, Transforms, Element, Range, Node, Path, Point, Text } from "slate"
 import { css } from "@emotion/css"
 
 export const withStamps = (editor, onStampInsert, onStampClick) => {
   const stampedBlockType = 'stamped-item'
-  const { deleteBackward } = editor
+  const { deleteBackward, normalizeNode } = editor
 
   const StampedBlock = ({ attributes, children, element }) => {
     return (
@@ -13,7 +13,6 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
         className={css`
           display: flex;
           flex-direction: row;
-          align-items: center;
           overflow-wrap: break-word;
           & + & {
             margin-top: 0;
@@ -24,10 +23,10 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
           onClick={() => onStampClick(element.label, element.value)}
           contentEditable={false}
           className={css`
+            display: inline-block;
+            height: 100%;
             margin-right: 0.75em;
             color: red;
-            user-select: none;
-            pointer-events: pointer;
           `}
         >
           <button
@@ -258,6 +257,56 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
       }
     }
     deleteBackward(...args)
+  }
+
+  editor.normalizeNode = entry => {
+    const [node, path] = entry
+    if (Text.isText(node)) {
+      const newlineIndex = node.text.search(/(?<!\\)\n/)
+      if (newlineIndex >= 0) {
+        let match = Editor.above(editor, {
+          match: (n) => 
+            !Editor.isEditor(n) &&
+            Element.isElement(n) &&
+            n.type !== "stamped-item",
+          at: path
+        })
+
+        if (match) {
+          const [closestNonStampedAncestor, closestNonStampedAncestorPath] = match
+          Transforms.splitNodes(editor, {
+            at: { path: path, offset: newlineIndex + 1 },
+          })
+          Transforms.delete(editor, {
+            at: { path: path, offset: newlineIndex },
+            distance: 1,
+            unit: 'character',
+          })
+          if (!Node.has(editor, Path.next(Path.parent(path)))) return
+          match = Editor.above(editor, {
+            match: (n) =>
+              !Editor.isEditor(n) &&
+              Element.isElement(n) &&
+              n.type === 'stamped-item',
+            at: path
+          })
+          if (match) {
+            const [, pathOfLeftBlock] = match
+            Transforms.moveNodes(editor, {
+              at: Path.next(pathOfLeftBlock),
+              to: Path.next(closestNonStampedAncestorPath)
+            })
+            Transforms.wrapNodes(
+              editor, 
+              { type: closestNonStampedAncestor.type }, 
+              { at: Path.next(closestNonStampedAncestorPath) }
+            )
+          }
+        }
+      }
+      return
+    }
+    normalizeNode(entry)
   }
 
   editor.StampedElementComponent = StampedBlock
