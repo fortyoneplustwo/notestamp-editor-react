@@ -8,12 +8,12 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
 
   const StampedBlock = ({ attributes, children, element }) => {
     return (
-      <div
+      <span
         {...attributes}
         className={css`
           display: flex;
           flex-direction: row;
-          overflow-wrap: break-word;
+          overflow-y: none;
           & + & {
             margin-top: 0;
           }
@@ -37,6 +37,9 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
               color: red;
               user-select: none;
               padding: 0;
+              &focus: {
+                outline: none;
+              }
             `}
           >
             {element.label}
@@ -47,6 +50,9 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
           suppressContentEditableWarning
           className={css`
             flex: 1;
+            width: 100%;
+            overflow-wrap: break-word;
+            word-break: break-word;
             &:focus {
               outline: none;
             }
@@ -54,7 +60,7 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
         >
           {children}
         </span>
-      </div>
+      </span>
     )
   }
 
@@ -282,7 +288,9 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
             distance: 1,
             unit: 'character',
           })
+
           if (!Node.has(editor, Path.next(Path.parent(path)))) return
+
           match = Editor.above(editor, {
             match: (n) =>
               !Editor.isEditor(n) &&

@@ -294,12 +294,12 @@ const MarkButton = ({ format, icon, description }) => {
 
 const Paragraph = ({ attributes, children }) => {
   return (
-    <div
+    <p
       {...attributes}
       style={{ margin: '0', padding: '0', contentEditable: 'true' }}
     >
       {children}
-    </div>
+    </p>
   )
 }
 
