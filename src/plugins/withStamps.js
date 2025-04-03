@@ -274,7 +274,7 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
           match: (n) => 
             !Editor.isEditor(n) &&
             Element.isElement(n) &&
-            n.type !== "stamped-item",
+            n.type !== stampedBlockType,
           at: path
         })
 
@@ -295,7 +295,7 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
             match: (n) =>
               !Editor.isEditor(n) &&
               Element.isElement(n) &&
-              n.type === 'stamped-item',
+              n.type === stampedBlockType,
             at: path
           })
           if (match) {
