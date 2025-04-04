@@ -13,7 +13,7 @@ import { css } from "@emotion/css"
 
 export const withStamps = (editor, onStampInsert, onStampClick) => {
   const stampedBlockType = "stamped-item"
-  const { deleteBackward, normalizeNode } = editor
+  const { deleteBackward, normalizeNode, insertText } = editor
 
   const StampedBlock = ({ attributes, children, element }) => {
     return (
@@ -175,6 +175,7 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
   }
 
   editor.insertText = text => {
+    const marks = Editor.marks(editor)
     const match = getWrappingBlock(editor)
     if (!match)
       throw Error(
@@ -184,17 +185,17 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
     const [block, blockPath] = match
 
     if (block.type === stampedBlockType) {
-      Transforms.insertText(editor, text)
+      insertText(text)
       return
     }
     if (!isBlockEmpty(block)) {
-      Transforms.insertText(editor, text)
+      insertText(text)
       return
     }
 
     const stampData = onStampInsert()
     if (!stampData || stampData?.value === null) {
-      Transforms.insertText(editor, text)
+      insertText(text)
       return
     }
 
@@ -207,7 +208,7 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
             type: stampedBlockType,
             label: stampData.label,
             value: stampData.value,
-            children: [{ text: "" }],
+            children: [{ text: "", ...marks }],
           },
         ],
       },

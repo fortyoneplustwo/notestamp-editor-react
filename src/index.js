@@ -8,6 +8,7 @@ import { Toolbar, Button, Icon } from "./Toolbar"
 import { useEditor } from "./hooks/useEditor"
 import { withStamps } from "./plugins/withStamps"
 import { withLists } from "./plugins/withLists"
+import { withMarks } from "./plugins/withMarks"
 
 const markButtonHotkeys = {
   "mod+b": "bold",
@@ -41,7 +42,7 @@ const Notestamp = ({
   )
 
   const editor = useMemo(
-    () => withLists(withStamps(baseEditor, onStampInsert, onStampClick)),
+    () => withStamps(withLists(withStamps(baseEditor, onStampInsert, onStampClick))),
     [onStampInsert, onStampClick]
   )
   const blockButtonHotkeys = {
@@ -204,12 +205,7 @@ const toggleBlock = (editor, format) => {
 // Toggle mark on current selection
 const toggleMark = (editor, format) => {
   const isActive = isMarkActive(editor, format)
-
-  if (isActive) {
-    Editor.removeMark(editor, format)
-  } else {
-    Editor.addMark(editor, format, true)
-  }
+  editor.toggleMark(isActive, format)
 }
 
 const isBlockActive = (editor, format, blockType = "type") => {
