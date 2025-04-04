@@ -18,7 +18,7 @@ export const useEditor = props => {
   const [internalClipboard, setInternalClipboard] = useState([])
 
   const editor = useMemo(
-    () => withLists(withReact(withHistory(createEditor()))),
+    () => withReact(withHistory(createEditor())),
     []
   )
 

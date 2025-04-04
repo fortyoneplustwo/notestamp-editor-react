@@ -7,6 +7,7 @@ import { Editor, Transforms, Element as SlateElement } from "slate"
 import { Toolbar, Button, Icon } from "./Toolbar"
 import { useEditor } from "./hooks/useEditor"
 import { withStamps } from "./plugins/withStamps"
+import { withLists } from "./plugins/withLists"
 
 const markButtonHotkeys = {
   "mod+b": "bold",
@@ -45,7 +46,7 @@ const Notestamp = ({
   )
 
   const editor = useMemo(
-    () => withStamps(baseEditor, onStampInsert, onStampClick),
+    () => withLists(withStamps(baseEditor, onStampInsert, onStampClick)),
     [onStampInsert, onStampClick]
   )
 

@@ -9,22 +9,34 @@ export const withLists = editor => {
   editor.toggleList = (isActive, type) => {
     if (!LIST_TYPES.includes(type)) throw Error("Invalid list type")
 
-    Transforms.unwrapNodes(editor, {
-      match: n =>
-        !Editor.isEditor(n) &&
-        Element.isElement(n) &&
-        LIST_TYPES.includes(n.type),
-      split: true,
-    })
-    const newProperties = {
-      type: isActive ? "paragraph" : LIST_ITEM_TYPE,
-    }
-    Transforms.setNodes(editor, newProperties)
+    Editor.withoutNormalizing(editor, () => {
+      Transforms.unwrapNodes(editor, {
+        match: n =>
+          !Editor.isEditor(n) &&
+          Element.isElement(n) &&
+          LIST_TYPES.includes(n.type),
+        split: true,
+      })
+      const newProperties = {
+        type: isActive ? "paragraph" : LIST_ITEM_TYPE,
+      }
+      Transforms.setNodes(editor, newProperties, {
+        match: n =>
+          !Editor.isEditor(n) &&
+          Element.isElement(n) &&
+          n.type !== editor.stampedElementType,
+      })
 
-    if (!isActive) {
-      const block = { type: type, children: [] }
-      Transforms.wrapNodes(editor, block)
-    }
+      if (!isActive) {
+        const block = { type: type, children: [] }
+        Transforms.wrapNodes(editor, block, {
+          match: n =>
+            !Editor.isEditor(n) &&
+            Element.isElement(n) &&
+            n.type === LIST_ITEM_TYPE,
+        })
+      }
+    })
   }
 
   editor.LIST_TYPES = LIST_TYPES
