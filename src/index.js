@@ -16,11 +16,6 @@ const markButtonHotkeys = {
   "mod+`": "code",
 }
 
-const blockButtonHotkeys = {
-  "mod+shift+8": "numbered-list",
-  "mod+shift+9": "bulleted-list",
-}
-
 const Notestamp = ({
   editor: baseEditor,
   placeholder,
@@ -49,6 +44,10 @@ const Notestamp = ({
     () => withLists(withStamps(baseEditor, onStampInsert, onStampClick)),
     [onStampInsert, onStampClick]
   )
+  const blockButtonHotkeys = {
+    "mod+shift+8": editor.NUMBERED_LIST_TYPE,
+    "mod+shift+9": editor.BULLETED_LIST_TYPE,
+  }
 
   const Element = props => {
     const { children, element, attributes } = props
@@ -148,12 +147,12 @@ const Notestamp = ({
                 description="Code (Ctrl+`)"
               />
               <BlockButton
-                format="numbered-list"
+                format={editor.NUMBERED_LIST_TYPE}
                 icon="format_list_numbered"
                 description="Toggle numbered list (Ctrl+Shift+8)"
               />
               <BlockButton
-                format="bulleted-list"
+                format={editor.BULLETED_LIST_TYPE}
                 icon="format_list_bulleted"
                 description="Toggle bulleted list (Ctrl+Shift+9)"
               />
