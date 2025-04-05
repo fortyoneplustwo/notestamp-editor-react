@@ -12,15 +12,11 @@ import {
 import { withHistory } from "slate-history"
 import { withReact } from "slate-react"
 import { getLines, linesToString } from "../utils/lines"
-import { withLists } from "../plugins/withLists"
 
-export const useEditor = props => {
+export const useEditor = () => {
   const [internalClipboard, setInternalClipboard] = useState([])
 
-  const editor = useMemo(
-    () => withReact(withHistory(createEditor())),
-    []
-  )
+  const editor = useMemo(() => withReact(withHistory(createEditor())), [])
 
   editor.getChildren = () => editor.children
 

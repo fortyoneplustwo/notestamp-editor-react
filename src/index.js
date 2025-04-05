@@ -1,5 +1,5 @@
 import "material-icons/iconfont/material-icons.css"
-import React, { useMemo, useCallback } from "react"
+import React, { useMemo, useCallback, useState } from "react"
 import { isHotkey } from "is-hotkey"
 import { Editable, useSlate } from "slate-react"
 import * as SlateReact from "slate-react"
@@ -11,7 +11,7 @@ import { withLists } from "./plugins/withLists"
 import { withMarks } from "./plugins/withMarks"
 
 const Notestamp = ({
-  editor: baseEditor,
+  baseEditor,
   placeholder,
   borderSize,
   borderStyle,
@@ -21,10 +21,8 @@ const Notestamp = ({
   onStampInsert,
   onStampClick,
 }) => {
-  const editor = useMemo(
-    () =>
-      withMarks(withLists(withStamps(baseEditor, onStampInsert, onStampClick))),
-    [onStampInsert, onStampClick]
+  const [editor] = useState(() =>
+      withMarks(withLists(withStamps(baseEditor, onStampInsert, onStampClick)))
   )
 
   const initialValue = useMemo(

@@ -12,8 +12,8 @@ import {
 import { css } from "@emotion/css"
 
 export const withStamps = (editor, onStampInsert, onStampClick) => {
-  const stampedBlockType = "stamped-item"
   const { deleteBackward, normalizeNode, insertText } = editor
+  const stampedBlockType = "stamped-item"
 
   const StampedBlock = ({ attributes, children, element }) => {
     return (
@@ -29,7 +29,7 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
         `}
       >
         <span
-          onClick={() => onStampClick(element.label, element.value)}
+          onClick={() => onStampClick.current?.(element.label, element.value)}
           contentEditable={false}
           className={css`
             display: inline-block;
@@ -74,19 +74,12 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
   }
 
   editor.insertBreak = () => {
-    const stampData = onStampInsert()
     let { selection } = editor
 
     if (Range.isExpanded(selection)) {
       editor.deleteFragment()
-      // NOTE: not sure this is necessary
-      const selectionStart = Editor.start(editor, selection)
-      Transforms.setSelection(editor, {
-        anchor: selectionStart,
-        focus: selectionStart,
-      })
+      selection = editor.selection
     }
-    selection = editor.selection
 
     let match = getWrappingUnstampedAncestor(editor)
     if (!match) {
@@ -146,6 +139,7 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
       })
     }
 
+    const stampData = onStampInsert.current?.()
     const children =
       stampData && stampData?.value !== null
         ? [
@@ -183,44 +177,34 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
 
     const [block, blockPath] = match
 
-    if (block.type === stampedBlockType) {
-      insertText(text)
-      return
-    }
-    if (!isBlockEmpty(block)) {
-      insertText(text)
-      return
-    }
-
-    const stampData = onStampInsert()
-    if (!stampData || stampData?.value === null) {
-      insertText(text)
-      return
-    }
-
-    Transforms.insertNodes(
-      editor,
-      {
-        type: block.type,
-        children: [
+    if (block.type !== stampedBlockType && isBlockEmpty(block)) {
+      const stampData = onStampInsert.current?.()
+      if (stampData && stampData.value !== null) {
+        Transforms.insertNodes(
+          editor,
           {
-            type: stampedBlockType,
-            label: stampData.label,
-            value: stampData.value,
-            children: [{ text: "", ...marks }],
+            type: block.type,
+            children: [
+              {
+                type: stampedBlockType,
+                label: stampData.label,
+                value: stampData.value,
+                children: [{ text: "", ...marks }],
+              },
+            ],
           },
-        ],
-      },
-      { at: Path.next(blockPath) }
-    )
-    Transforms.removeNodes(editor, { at: blockPath })
-    Transforms.insertText(editor, text)
-    return
+          { at: Path.next(blockPath) }
+        )
+        Transforms.removeNodes(editor, { at: blockPath })
+      }
+    }
+    insertText(text)
   }
 
   editor.deleteFragment = () => {
     const { selection } = editor
     const selectionStart = Editor.start(editor, selection)
+    const selectionEnd = Editor.end(editor, selection)
 
     let match = getWrappingBlock(editor, { at: selectionStart })
     if (!match) {
@@ -228,37 +212,69 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
         "Invalid node: Selection before delete is not wrapped in a non-editor block"
       )
     }
-
     const [blockAtSelectionStart, blockPathAtSelectionStart] = match
-    if (blockAtSelectionStart.type === stampedBlockType) {
-      Transforms.delete(editor)
-      return
+
+    match = getWrappingBlock(editor, { at: selectionEnd })
+    if (!match) {
+      throw Error(
+        "Invalid node: Selection before delete is not wrapped in a non-editor block"
+      )
     }
-    if (
-      !Point.equals(
+    const [blockAtSelectionEnd, blockPathAtSelectionEnd] = match
+
+    const isSelectionContainedWithinSameLine =
+      Point.compare(
         selectionStart,
         Editor.start(editor, blockPathAtSelectionStart)
-      )
-    ) {
+      ) >= 0 &&
+      Point.compare(
+        selectionEnd,
+        Editor.end(editor, blockPathAtSelectionStart)
+      ) <= 0
+
+    if (isSelectionContainedWithinSameLine) {
       Transforms.delete(editor)
       return
     }
 
-    Transforms.delete(editor)
+    match = getWrappingUnstampedAncestor(editor, { at: selectionStart })
+    if (!match) throw Error("Could not find wrapping unstamped ancestor")
+    const [, unstampedAncestorPathAtSelectionStart] = match
 
-    match = getWrappingBlock(editor)
-    if (!match)
-      throw Error("Selection after deletion is not inside a non-editor block")
-
-    const [blockAfterDelete, blockPathAfterDelete] = match
-    if (blockAfterDelete.type !== stampedBlockType) return
-    Transforms.setNodes(
-      editor,
+    const contentFromSelectionEndtoEndOfItsBlock = Node.fragment(
+      blockAtSelectionEnd,
       {
-        type: blockAtSelectionStart.type,
-      },
-      { at: blockPathAfterDelete }
+        anchor: {
+          path: selectionEnd.path.slice(-1),
+          offset: selectionEnd.offset,
+        },
+        focus: {
+          path: Editor.end(editor, blockPathAtSelectionEnd).path.slice(-1),
+          offset: Editor.end(editor, blockPathAtSelectionEnd).offset,
+        },
+      }
     )
+
+    Transforms.removeNodes(editor, {
+      match: n =>
+        Element.isElement(n) &&
+        Editor.isBlock(editor, n) &&
+        n.type !== stampedBlockType,
+      at: {
+        anchor: Editor.start(
+          editor,
+          Path.next(unstampedAncestorPathAtSelectionStart)
+        ),
+        focus: selectionEnd,
+      },
+    })
+
+    Transforms.insertNodes(editor, contentFromSelectionEndtoEndOfItsBlock, {
+      at: {
+        anchor: selectionStart,
+        focus: Editor.end(editor, unstampedAncestorPathAtSelectionStart),
+      },
+    })
   }
 
   editor.deleteBackward = (...args) => {

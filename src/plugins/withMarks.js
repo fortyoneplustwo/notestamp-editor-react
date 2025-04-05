@@ -18,7 +18,6 @@ export const withMarks = editor => {
   )
 
   editor.toggleMark = (isActive, format) => {
-    const isActive = editor.isMarkActive(format)
     if (isActive) {
       Editor.removeMark(editor, format)
     } else {

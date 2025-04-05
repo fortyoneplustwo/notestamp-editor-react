@@ -1,13 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from "react"
 
-import { Notestamp, useEditor } from 'notestamp'
+import { Notestamp, useEditor } from "notestamp"
 
 const App = () => {
   const [editorContent, setEditorContent] = useState(null)
   const [count, setCount] = useState(0)
 
   const setStampData = useCallback(() => {
-    console.log(count)
     setCount(c => c + 1)
     if (count % 5 === 0) {
       return null
@@ -15,7 +14,19 @@ const App = () => {
     return { label: count.toString(), value: count }
   }, [count])
 
-  const handleLogStampData = (label, val) => console.log(`clicked: ${label}, ${val}`)
+  const handleLogStampData = (label, val) =>
+    console.log(`clicked: ${label}, ${val}`)
+
+  const setStampDataRef = useRef(setStampData)
+  const handleLogStampDataRef = useRef(handleLogStampData)
+
+  useEffect(() => {
+    setStampDataRef.current = setStampData
+  }, [setStampData])
+
+  useEffect(() => {
+    handleLogStampDataRef.current = handleLogStampData
+  }, [])
 
   const { editor } = useEditor()
 
@@ -23,7 +34,7 @@ const App = () => {
   const handleCaptureEditorContent = useCallback(() => {
     setEditorContent(editor.getChildren())
   }, [editor])
-  
+
   useEffect(() => {
     handleCaptureEditorContent()
   }, [handleCaptureEditorContent])
@@ -34,27 +45,24 @@ const App = () => {
   }
 
   return (
-    <div style={{ margin: '5px', padding: '0', height: '300px' }}>
+    <div style={{ margin: "5px", padding: "0", height: "300px" }}>
       <Notestamp
-        editor={editor}
-        borderSize='1px'
-        borderColor='lightgray'
-        borderStyle='solid'
-        toolbarBackgroundColor='whitesmoke'
-        onStampInsert={setStampData}
-        onStampClick={handleLogStampData}
+        baseEditor={editor}
+        borderSize="1px"
+        borderColor="lightgray"
+        borderStyle="solid"
+        toolbarBackgroundColor="whitesmoke"
+        onStampInsert={setStampDataRef}
+        onStampClick={handleLogStampDataRef}
       />
-      <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+      <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
         <button onClick={handleCaptureEditorContent}>
           Capture editor content
         </button>
         <button onClick={handleRestoreEditorContent}>
           Restore last captured content
         </button>
-        <button 
-          onClick={editor.clear}>
-          Clear editor
-        </button>
+        <button onClick={editor.clear}>Clear editor</button>
       </div>
     </div>
   )
