@@ -10,13 +10,6 @@ import { withStamps } from "./plugins/withStamps"
 import { withLists } from "./plugins/withLists"
 import { withMarks } from "./plugins/withMarks"
 
-const markButtonHotkeys = {
-  "mod+b": "bold",
-  "mod+i": "italic",
-  "mod+u": "underline",
-  "mod+`": "code",
-}
-
 const Notestamp = ({
   editor: baseEditor,
   placeholder,
@@ -28,9 +21,10 @@ const Notestamp = ({
   onStampInsert,
   onStampClick,
 }) => {
-  const renderElement = useCallback(props => <Element {...props} />, [])
-  const renderLeaf = useCallback(props => <Leaf {...props} />, [])
-
+  const editor = useMemo(
+    () => withMarks(withStamps(baseEditor, onStampInsert, onStampClick)),
+    [onStampInsert, onStampClick]
+  )
   const initialValue = useMemo(
     () => [
       {
@@ -42,12 +36,21 @@ const Notestamp = ({
   )
 
   const editor = useMemo(
-    () => withStamps(withLists(withStamps(baseEditor, onStampInsert, onStampClick))),
+    () =>
+      withStamps(
+        withLists(withStamps(baseEditor, onStampInsert, onStampClick))
+      ),
     [onStampInsert, onStampClick]
   )
   const blockButtonHotkeys = {
     "mod+shift+8": editor.NUMBERED_LIST_TYPE,
     "mod+shift+9": editor.BULLETED_LIST_TYPE,
+  }
+  const markButtonHotkeys = {
+    "mod+b": editor.MARKS.bold,
+    "mod+i": editor.MARKS.italic,
+    "mod+u": editor.MARKS.underline,
+    "mod+`": editor.MARKS.code,
   }
 
   const Element = props => {
@@ -66,6 +69,43 @@ const Notestamp = ({
         return <Paragraph {...props}>{children}</Paragraph>
     }
   }
+
+  const Leaf = props => {
+    let { attributes, children, leaf } = props
+    const {
+      BoldMarkComponent,
+      ItalicMarkComponent,
+      UnderlineMarkComponent,
+      CodeMarkComponent,
+      MARKS,
+    } = editor
+
+    if (leaf[MARKS.bold])
+      children = <BoldMarkComponent>{children}</BoldMarkComponent>
+    if (leaf[MARKS.code])
+      children = <CodeMarkComponent>{children}</CodeMarkComponent>
+    if (leaf[MARKS.italic])
+      children = <ItalicMarkComponent>{children}</ItalicMarkComponent>
+    if (leaf[MARKS.underline])
+      children = <UnderlineMarkComponent>{children}</UnderlineMarkComponent>
+
+    return (
+      <span
+        // The following is a workaround for a Chromium bug where,
+        // if you have an inline at the end of a block,
+        // clicking the end of a block puts the cursor inside the inline
+        // instead of inside the final {text: ''} node
+        // https://github.com/ianstormtaylor/slate/issues/4704#issuecomment-1006696364
+        style={{ paddingLeft: leaf.text === "" ? "0.1px" : "null" }}
+        {...attributes}
+      >
+        {children}
+      </span>
+    )
+  }
+
+  const renderElement = useCallback(props => <Element {...props} />, [])
+  const renderLeaf = useCallback(props => <Leaf {...props} />, [])
 
   const dispatchKeyEvent = event => {
     switch (event.key) {
@@ -128,22 +168,22 @@ const Notestamp = ({
               }}
             >
               <MarkButton
-                format="bold"
+                format={editor.MARKS.bold}
                 icon="format_bold"
                 description="Bold (Ctrl+B)"
               />
               <MarkButton
-                format="italic"
+                format={editor.MARKS.italic}
                 icon="format_italic"
                 description="Italic (Ctrl+I)"
               />
               <MarkButton
-                format="underline"
+                format={editor.MARKS.underline}
                 icon="format_underlined"
                 description="Underline (Ctrl+U)"
               />
               <MarkButton
-                format="code"
+                format={editor.MARKS.code}
                 icon="code"
                 description="Code (Ctrl+`)"
               />
@@ -187,10 +227,7 @@ const Notestamp = ({
 /* Functions */
 const handleInsertTab = (event, editor) => {
   event.preventDefault()
-  const marks = Editor.marks(editor)
-  Transforms.insertText(editor, "\t")
-  for (const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true)
-  return
+  editor.insertText("\t")
 }
 
 const toggleBlock = (editor, format) => {
@@ -202,7 +239,6 @@ const toggleBlock = (editor, format) => {
   }
 }
 
-// Toggle mark on current selection
 const toggleMark = (editor, format) => {
   const isActive = isMarkActive(editor, format)
   editor.toggleMark(isActive, format)
@@ -271,27 +307,6 @@ const Paragraph = ({ attributes, children }) => {
     >
       {children}
     </p>
-  )
-}
-
-const Leaf = props => {
-  let { attributes, children, leaf } = props
-  if (leaf.bold) children = <strong>{children}</strong>
-  if (leaf.code) children = <code style={{ color: "grey" }}>{children}</code>
-  if (leaf.italic) children = <em>{children}</em>
-  if (leaf.underline) children = <u>{children}</u>
-  return (
-    <span
-      // The following is a workaround for a Chromium bug where,
-      // if you have an inline at the end of a block,
-      // clicking the end of a block puts the cursor inside the inline
-      // instead of inside the final {text: ''} node
-      // https://github.com/ianstormtaylor/slate/issues/4704#issuecomment-1006696364
-      style={{ paddingLeft: leaf.text === "" ? "0.1px" : "null" }}
-      {...attributes}
-    >
-      {children}
-    </span>
   )
 }
 
