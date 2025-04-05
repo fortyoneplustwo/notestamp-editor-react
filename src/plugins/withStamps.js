@@ -96,6 +96,7 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
     }
 
     const [unstampedAncestor, unstampedAncestorPath] = match
+    console.log(unstampedAncestor)
 
     match = getWrappingBlock(editor)
     if (!match)
@@ -375,7 +376,7 @@ const getWrappingUnstampedAncestor = (editor, options) => {
     match: n =>
       !Editor.isEditor(n) &&
       Element.isElement(n) &&
-      n.type !== stampedBlockType,
+      n.type !== editor.stampedElementType,
     at: options?.at ?? editor.selection,
   })
 }
