@@ -109,7 +109,7 @@ const Notestamp = ({
     switch (event.key) {
       case "Tab":
         event.preventDefault()
-        handleInsertTab(event, editor)
+        editor.insertText("\t")
         break
       default:
         for (let hotkey in markButtonHotkeys) {
@@ -223,11 +223,6 @@ const Notestamp = ({
 }
 
 /* Functions */
-const handleInsertTab = (event, editor) => {
-  event.preventDefault()
-  editor.insertText("\t")
-}
-
 const toggleBlock = (editor, format) => {
   const isActive = isBlockActive(editor, format)
   const isList = editor.LIST_TYPES.includes(format)
@@ -236,7 +231,6 @@ const toggleBlock = (editor, format) => {
     editor.toggleList(isActive, format)
   }
 }
-
 
 const isBlockActive = (editor, format, blockType = "type") => {
   const { selection } = editor
