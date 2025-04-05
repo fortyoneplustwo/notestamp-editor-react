@@ -96,7 +96,6 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
     }
 
     const [unstampedAncestor, unstampedAncestorPath] = match
-    console.log(unstampedAncestor)
 
     match = getWrappingBlock(editor)
     if (!match)

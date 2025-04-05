@@ -1,8 +1,8 @@
 import React from "react"
-import { Editor, Range, Transforms } from "slate"
+import { Editor } from "slate"
 
 export const withMarks = editor => {
-  const { insertText, insertBreak } = editor
+  const { insertBreak } = editor
 
   const bold = "bold"
   const italic = "italic"
@@ -17,12 +17,7 @@ export const withMarks = editor => {
     <code style={{ color: "grey" }}>{children}</code>
   )
 
-  editor.isMarkActive = format => {
-    const marks = Editor.marks(editor)
-    return marks ? marks[format] === true : false
-  }
-
-  editor.toggleMark = format => {
+  editor.toggleMark = (isActive, format) => {
     const isActive = editor.isMarkActive(format)
     if (isActive) {
       Editor.removeMark(editor, format)
