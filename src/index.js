@@ -3,7 +3,7 @@ import React, { useMemo, useCallback, useState } from "react"
 import { isHotkey } from "is-hotkey"
 import { Editable, useSlate } from "slate-react"
 import * as SlateReact from "slate-react"
-import { Editor, Element as SlateElement } from "slate"
+import { Editor, Element as SlateElement, Point, Transforms } from "slate"
 import { Toolbar, Button, Icon } from "./Toolbar"
 import { useEditor } from "./hooks/useEditor"
 import { withStamps } from "./plugins/withStamps"
@@ -22,7 +22,7 @@ const Notestamp = ({
   onStampClick,
 }) => {
   const [editor] = useState(() =>
-      withMarks(withLists(withStamps(baseEditor, onStampInsert, onStampClick)))
+    withMarks(withLists(withStamps(baseEditor, onStampInsert, onStampClick)))
   )
 
   const initialValue = useMemo(
@@ -43,6 +43,54 @@ const Notestamp = ({
     "mod+i": editor.MARKS.italic,
     "mod+u": editor.MARKS.underline,
     "mod+`": editor.MARKS.code,
+  }
+
+  /**
+   * Override editor methods
+   */
+  const { deleteBackward } = editor
+
+  editor.deleteBackward = (...args) => {
+    const { selection } = editor
+    let match = Editor.above(editor, {
+      match: n =>
+        !Editor.isEditor(n) &&
+        SlateElement.isElement(n) &&
+        Editor.isBlock(editor, n),
+    })
+    if (!match) throw Error("Could not find non-editor wrapping block")
+
+    const [block, blockPath] = match
+    const isSelectionAtBlockStart = Point.equals(
+      selection.anchor,
+      Editor.start(editor, blockPath)
+    )
+    const pointBefore = Editor.before(editor, selection.anchor)
+    const isBlockEmpty = block =>
+      block.children.length === 1 && block.children[0].text === ""
+
+    match =
+      pointBefore &&
+      Editor.above(editor, {
+        at: pointBefore,
+        match: n => !Editor.isEditor(n) && Editor.isBlock(editor, n),
+        mode: "lowest",
+      })
+
+    if (match) {
+      const [blockAtPointBefore, blockPathAtPointBefore] = match
+      if (
+        isSelectionAtBlockStart &&
+        block.type === editor.stampedElementType &&
+        blockAtPointBefore.type === "paragraph" &&
+        // blockPathAtPointBefore[0] === 0 &&
+        isBlockEmpty(blockAtPointBefore)
+      ) {
+        Transforms.removeNodes(editor, { at: blockPathAtPointBefore })
+        return
+      }
+    }
+    deleteBackward(...args)
   }
 
   /**
