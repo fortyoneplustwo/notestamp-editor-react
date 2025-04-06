@@ -212,7 +212,7 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
         "Invalid node: Selection before delete is not wrapped in a non-editor block"
       )
     }
-    const [blockAtSelectionStart, blockPathAtSelectionStart] = match
+    const [, blockPathAtSelectionStart] = match
 
     match = getWrappingBlock(editor, { at: selectionEnd })
     if (!match) {
