@@ -280,48 +280,37 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
   editor.deleteBackward = (...args) => {
     const { selection } = editor
     let match = getWrappingBlock(editor)
-    if (match) {
-      const [block, blockPath] = match
-      const blockStart = Editor.start(editor, blockPath)
+    if (!match) throw Error("Could not find non-editor wrapping block")
+
+    const [block, blockPath] = match
+    if (Point.equals(selection.anchor, Editor.start(editor, blockPath))) {
       if (block.type === stampedBlockType) {
-        if (Point.equals(selection.anchor, blockStart)) {
-          Transforms.unwrapNodes(editor)
-          return
-        }
+        Transforms.unwrapNodes(editor)
+        return
       }
 
       const pointBefore = Editor.before(editor, selection.anchor)
-      if (pointBefore && Point.equals(selection.anchor, blockStart)) {
-        match = Editor.above(editor, {
+      match =
+        pointBefore &&
+        Editor.above(editor, {
+          at: pointBefore,
           match: n =>
             !Editor.isEditor(n) &&
             Element.isElement(n) &&
             n.type === stampedBlockType,
-          at: pointBefore,
         })
 
-        if (match) {
-          const [, blockPathAtPointBefore] = match
-          if (
-            Point.equals(
-              pointBefore,
-              Editor.start(editor, blockPathAtPointBefore)
-            )
-          ) {
-            Transforms.removeNodes(editor)
-            Transforms.setSelection(editor, {
-              anchor: pointBefore,
-              focus: pointBefore,
-            })
+      if (match) {
+        Transforms.removeNodes(editor)
+        Transforms.setSelection(editor, {
+          anchor: pointBefore,
+          focus: pointBefore,
+        })
 
-            if (!isBlockEmpty(block)) {
-              Transforms.insertNodes(editor, block.children, {
-                at: pointBefore,
-              })
-            }
-            return
-          }
+        if (!isBlockEmpty(block)) {
+          Transforms.insertNodes(editor, block.children, { at: pointBefore })
         }
+        return
       }
     }
     deleteBackward(...args)

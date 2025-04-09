@@ -57,16 +57,3 @@ export const Button = React.forwardRef(
     />
   )
 )
-
-export const Toolbar = React.forwardRef(({ className, ...props }, ref) => (
-  <Menu
-    {...props}
-    ref={ref}
-    className={cx(
-      className,
-      css`
-        padding: 10px;
-      `
-    )}
-  />
-))
