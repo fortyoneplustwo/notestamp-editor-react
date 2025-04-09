@@ -16,7 +16,7 @@ import { getLines, linesToString } from "../utils/lines"
 export const useEditor = () => {
   const [internalClipboard, setInternalClipboard] = useState([])
 
-  const editor = useMemo(() => withReact(withHistory(createEditor())), [])
+  const [editor] = useState(() => createEditor())
 
   editor.getChildren = () => editor.children
 

@@ -1,17 +1,17 @@
 import "material-icons/iconfont/material-icons.css"
 import React, { useMemo, useCallback, useState } from "react"
-import { isHotkey } from "is-hotkey"
-import { Editable, useSlate } from "slate-react"
-import * as SlateReact from "slate-react"
+import { Slate, Editable, withReact } from "slate-react"
 import { Editor, Element as SlateElement, Point, Transforms } from "slate"
-import { Toolbar, Button, Icon } from "./Toolbar"
 import { useEditor } from "./hooks/useEditor"
+import { useFormatActiveState } from "./hooks/useFormat"
 import { withStamps } from "./plugins/withStamps"
 import { withLists } from "./plugins/withLists"
 import { withMarks } from "./plugins/withMarks"
+import { withHistory } from "slate-history"
+import { Format } from "./utils/format"
 
 const Notestamp = ({
-  baseEditor,
+  editor: baseEditor,
   placeholder,
   borderSize,
   borderStyle,
@@ -20,9 +20,18 @@ const Notestamp = ({
   onChange,
   onStampInsert,
   onStampClick,
+  onKeyDown,
 }) => {
   const [editor] = useState(() =>
-    withMarks(withLists(withStamps(baseEditor, onStampInsert, onStampClick)))
+    withMarks(
+      withLists(
+        withStamps(
+          withReact(withHistory(baseEditor)),
+          onStampInsert,
+          onStampClick
+        )
+      )
+    )
   )
 
   const initialValue = useMemo(
@@ -34,16 +43,6 @@ const Notestamp = ({
     ],
     []
   )
-  const blockButtonHotkeys = {
-    "mod+shift+8": editor.NUMBERED_LIST_TYPE,
-    "mod+shift+9": editor.BULLETED_LIST_TYPE,
-  }
-  const markButtonHotkeys = {
-    "mod+b": editor.MARKS.bold,
-    "mod+i": editor.MARKS.italic,
-    "mod+u": editor.MARKS.underline,
-    "mod+`": editor.MARKS.code,
-  }
 
   /**
    * Override editor methods
@@ -83,7 +82,6 @@ const Notestamp = ({
         isSelectionAtBlockStart &&
         block.type === editor.stampedElementType &&
         blockAtPointBefore.type === "paragraph" &&
-        // blockPathAtPointBefore[0] === 0 &&
         isBlockEmpty(blockAtPointBefore)
       ) {
         Transforms.removeNodes(editor, { at: blockPathAtPointBefore })
@@ -154,101 +152,6 @@ const Notestamp = ({
   const renderElement = useCallback(props => <Element {...props} />, [])
   const renderLeaf = useCallback(props => <Leaf {...props} />, [])
 
-  /**
-   * Toggle marks and blocks
-   */
-  const isMarkActive = (editor, format) => {
-    const marks = Editor.marks(editor)
-    return marks ? marks[format] === true : false
-  }
-
-  const toggleMark = (editor, format) => {
-    const isActive = isMarkActive(editor, format)
-    editor.toggleMark(isActive, format)
-  }
-
-  const MarkButton = ({ format, icon, description }) => {
-    const editor = useSlate()
-    return (
-      <Button
-        active={isMarkActive(editor, format)}
-        title={description}
-        onMouseDown={event => {
-          event.preventDefault()
-          toggleMark(editor, format)
-        }}
-      >
-        <Icon>{icon}</Icon>
-      </Button>
-    )
-  }
-
-  const isBlockActive = (editor, format, blockType = "type") => {
-    const { selection } = editor
-    if (!selection) return false
-    const [match] = Array.from(
-      Editor.nodes(editor, {
-        at: Editor.unhangRange(editor, selection),
-        match: n =>
-          !Editor.isEditor(n) &&
-          SlateElement.isElement(n) &&
-          n[blockType] === format,
-      })
-    )
-    return !!match
-  }
-
-  const toggleBlock = (editor, format) => {
-    const isActive = isBlockActive(editor, format)
-    const isList = editor.LIST_TYPES.includes(format)
-    if (isList) {
-      editor.toggleList(isActive, format)
-    }
-  }
-
-  const BlockButton = ({ format, icon, description }) => {
-    const editor = useSlate()
-    return (
-      <Button
-        title={description}
-        active={isBlockActive(editor, format)}
-        onMouseDown={event => {
-          event.preventDefault()
-          toggleBlock(editor, format)
-        }}
-      >
-        <Icon>{icon}</Icon>
-      </Button>
-    )
-  }
-
-  /*
-   * Key event dispatch
-   */
-  const dispatchKeyEvent = event => {
-    switch (event.key) {
-      case "Tab":
-        event.preventDefault()
-        editor.insertText("\t")
-        break
-      default:
-        for (let hotkey in markButtonHotkeys) {
-          if (isHotkey(hotkey, event)) {
-            event.preventDefault()
-            toggleMark(editor, markButtonHotkeys[hotkey])
-            return
-          }
-        }
-        for (let hotkey in blockButtonHotkeys) {
-          if (isHotkey(hotkey, event)) {
-            event.preventDefault()
-            toggleBlock(editor, blockButtonHotkeys[hotkey])
-            return
-          }
-        }
-    }
-  }
-
   return (
     <div
       style={{
@@ -257,7 +160,7 @@ const Notestamp = ({
         height: "100%",
       }}
     >
-      <SlateReact.Slate
+      <Slate
         editor={editor}
         initialValue={initialValue}
         onChange={value => {
@@ -274,48 +177,6 @@ const Notestamp = ({
             height: "100%",
           }}
         >
-          <Toolbar>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                gap: "30px",
-                padding: "10px",
-                height: "100%",
-              }}
-            >
-              <MarkButton
-                format={editor.MARKS.bold}
-                icon="format_bold"
-                description="Bold (Ctrl+B)"
-              />
-              <MarkButton
-                format={editor.MARKS.italic}
-                icon="format_italic"
-                description="Italic (Ctrl+I)"
-              />
-              <MarkButton
-                format={editor.MARKS.underline}
-                icon="format_underlined"
-                description="Underline (Ctrl+U)"
-              />
-              <MarkButton
-                format={editor.MARKS.code}
-                icon="code"
-                description="Code (Ctrl+`)"
-              />
-              <BlockButton
-                format={editor.NUMBERED_LIST_TYPE}
-                icon="format_list_numbered"
-                description="Toggle numbered list (Ctrl+Shift+8)"
-              />
-              <BlockButton
-                format={editor.BULLETED_LIST_TYPE}
-                icon="format_list_bulleted"
-                description="Toggle bulleted list (Ctrl+Shift+9)"
-              />
-            </div>
-          </Toolbar>
           <Editable
             style={{
               outline: `${borderSize} ${borderStyle} ${borderColor}`,
@@ -333,12 +194,12 @@ const Notestamp = ({
             spellCheck
             onCopy={editor.handleCopy}
             onPaste={editor.handlePaste}
-            onKeyDown={dispatchKeyEvent}
+            onKeyDown={onKeyDown}
           />
         </div>
-      </SlateReact.Slate>
+      </Slate>
     </div>
   )
 }
 
-export { Notestamp, useEditor }
+export { Notestamp, Format, useEditor, useFormatActiveState }
