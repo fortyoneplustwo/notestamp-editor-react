@@ -12,15 +12,10 @@ import { Format } from "./utils/format"
 
 const Notestamp = ({
   editor: baseEditor,
-  placeholder,
-  borderSize,
-  borderStyle,
-  borderColor,
-  toolbarBackgroundColor,
-  onChange,
   onStampInsert,
   onStampClick,
-  onKeyDown,
+  style,
+  ...props
 }) => {
   const [editor] = useState(() =>
     withMarks(
@@ -153,52 +148,27 @@ const Notestamp = ({
   const renderLeaf = useCallback(props => <Leaf {...props} />, [])
 
   return (
-    <div
-      style={{
-        backgroundColor: `${toolbarBackgroundColor}`,
-        border: `${borderSize} ${borderStyle} ${borderColor}`,
-        height: "100%",
+    <Slate
+      editor={editor}
+      initialValue={initialValue}
       }}
     >
-      <Slate
-        editor={editor}
-        initialValue={initialValue}
-        onChange={value => {
-          const isAstChange = editor.operations.some(
-            op => "set_selection" !== op.type
-          )
-          isAstChange && onChange && onChange(value)
+      <Editable
+        style={{
+          tabSize: "4",
+          padding: "5px",
+          overflow: "auto",
+          overflowX: "hidden",
+          ...style,
         }}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            height: "100%",
-          }}
-        >
-          <Editable
-            style={{
-              outline: `${borderSize} ${borderStyle} ${borderColor}`,
-              tabSize: "2",
-              background: "white",
-              color: "black",
-              height: "100%",
-              padding: "5px",
-              overflow: "auto",
-              overflowX: "hidden",
-            }}
-            renderElement={renderElement}
-            renderLeaf={renderLeaf}
-            placeholder={placeholder ?? ""}
-            spellCheck
-            onCopy={editor.handleCopy}
-            onPaste={editor.handlePaste}
-            onKeyDown={onKeyDown}
-          />
-        </div>
-      </Slate>
-    </div>
+        spellCheck
+        {...props}
+        renderElement={renderElement}
+        renderLeaf={renderLeaf}
+        onCopy={editor.handleCopy}
+        onPaste={editor.handlePaste}
+      />
+    </Slate>
   )
 }
 

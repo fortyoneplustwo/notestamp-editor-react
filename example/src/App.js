@@ -75,31 +75,33 @@ const App = () => {
   }
 
   return (
-    <div style={{ height: "500px" }}>
-      <div style={{ margin: "5px", padding: "0", height: "300px" }}>
-        <Toolbar
-          editor={editor}
-          style={{ border: "1px solid lightgrey", marginBottom: "5px" }}
-        />
-        <Notestamp
-          editor={editor}
-          borderSize="1px"
-          borderColor="lightgray"
-          borderStyle="solid"
-          toolbarBackgroundColor="whitesmoke"
-          onStampInsert={setStampDataRef}
-          onStampClick={handleLogStampDataRef}
-          onKeyDown={handleKeyDown}
-        />
-        <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-          <button onClick={handleCaptureEditorContent}>
-            Capture editor content
-          </button>
-          <button onClick={handleRestoreEditorContent}>
-            Restore last captured content
-          </button>
-          <button onClick={editor.clear}>Clear editor</button>
-        </div>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        margin: "5px",
+        gap: "5px",
+      }}
+    >
+      <Toolbar editor={editor} style={{ border: "1px solid lightgrey" }} />
+      <Notestamp
+        editor={editor}
+        onStampInsert={setStampDataRef}
+        onStampClick={handleLogStampDataRef}
+        onKeyDown={handleKeyDown}
+        style={{
+          height: "300px",
+          border: "1px solid lightgrey",
+        }}
+      />
+      <div style={{ display: "flex", gap: "10px" }}>
+        <button onClick={handleCaptureEditorContent}>
+          Capture editor content
+        </button>
+        <button onClick={handleRestoreEditorContent}>
+          Restore last captured content
+        </button>
+        <button onClick={editor.clear}>Clear editor</button>
       </div>
     </div>
   )
