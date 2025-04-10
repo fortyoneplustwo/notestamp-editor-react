@@ -1,16 +1,14 @@
-
-# notestamp
-
-> Made with create-react-library
-
-[![NPM](https://img.shields.io/npm/v/notestamp.svg)](https://www.npmjs.com/package/notestamp) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
-
 ## Description
-A rich-text editor library for React that supports clickable stamps.
 
-A stamp is automatically inserted at the start of a line when the `Enter` key is pressed. You can define an arbitrary state to be stored inside a stamp as well as a function to execute when a stamp is clicked.
+A rich-text editor library for React that syncs text with any entity using clickable "stamps."
 
-A common use case of this component is to synchronize text to some entity e.g. an audio file. See [https://notestamp.com](https://notestamp.com) as an example.
+When the user inputs text on an empty line, a stamp is automatically inserted at the beginning of the line. Each stamp can hold custom state and trigger a function when clicked.
+
+## Why?
+- You need a textbox that can synchronize to an entity.
+- You need something that can be as simple as HTML's `textarea` or as complex as a rich-text editor
+- You'd like to design your own toolbar.
+- You don't have time to learn [Slate](https://docs.slatejs.org/) to build your own editor with stamp functionality.
 
 ## Install
 
@@ -19,6 +17,7 @@ npm install notestamp
 ```
 
 ## Usage
+First, extract the `editor` object using the `useEditor()` hook, then define your `onStampInsert` and `onStampClick` callback functions. Finally, pass all of these as props to the `Notestamp` component.
 
 ```jsx
 import React, { useRef } from 'react'
@@ -26,67 +25,115 @@ import React, { useRef } from 'react'
 import { Notestamp, useEditor } from 'notestamp'
 
 const App = () => {
-	const { editor } = useEditor()
-	
-	const setStampData = dateStampRequested => {
-	  return { label: 'three', value: 3 }
-	}
+  const { editor } = useEditor()
 
-	const printStampLabel = (label, _) => console.log(`Clicked stamp: ${label}`)
+  const setStampData = requestedAt => {
+    return { label: 'three', value: 3 }
+  }
 
-	return (
-	    <Notestamp 
-		    editor={editor}
-	        onStampInsert={setStampData}
-	        onStampClick={printStampLabel}
-	        borderSize='1px'
-	        borderColor='lightgray'
-	        borderStyle='solid'
-	        toolbarBackgroundColor='whitesmoke'
-	    />
-	)
+  const printStampLabel = (label, value) => {
+    console.log(`Clicked stamp: ${label, value}`)
+  }
+
+  return (
+    <Notestamp
+      editor={editor}
+      onStampInsert={setStampData}
+      onStampClick={printStampLabel}
+    />
+  )
 }
 ```
 
-## Usage
-Extract the `editor` object from the `useEditor()` hook and pass it as a prop to the `Notestamp` component.
-
-## Editor Object
-The `editor` object returned by `useEditor()` extends Slate's editor prototype with additional methods and behaviors, allowing you to use it without requiring deep knowledge of Slate.
-
-**Warning**: Only the methods defined below have been tested for this particular React library. If you wish to use all the other properties and methods available on the `editor` object, you should read up on [Slate's official documentation](https://docs.slatejs.org/concepts/07-editor). 
+## Editor object
+The `Editor` object returned by `useEditor()` has all the default properties and methods as [Slate's  prototype](https://docs.slatejs.org/concepts/07-editor) and is augmented with the high-level methods described below.
 
 ### Methods
-Use these methods to interact with the editor:
 
-- `getChildren()`: Returns the editor's content (also known as *children* in Slate). This is a JSON object conforming to Slate’s `Node[]` interface.
+#### `getChildren() => Node[]` 
+Returns the editor's content a.k.a. children.
 
-- `setChildren(children)`: Replaces the editor’s content with `children`. This is the only way to set content that includes stamps. The `children` must adhere to [Slate’s `Node[]` interface. Read more on [Slate's official documentation](https://docs.slatejs.org/concepts/02-nodes).
+#### `setChildren(children: Node[]) => void`
+ Replaces the editor’s content with `children`. The `children` must adhere to the `Node[]` interface  [defined by Slate](https://docs.slatejs.org/concepts/02-nodes).
 
-- `getTextContent(options)`: Returns the editor’s text as a single string, excluding stamps. To include stamps, pass `{ withStamps: true }` as `options`.
+#### `getTextContent(options?) => string`
+Returns the editor’s text content, excluding stamps by default. 
 
-- `setTextContent(content)`: Replaces the editor’s content with `content`, which must be a string.
+Options:
+- `{ withStamps: boolean }`: Include stamps in the return value.
 
-- `clear()`: Clears the editor’s content.
+#### `setTextContent(content: string) => void`
+Set the editor’s content.
 
-## Notestamp Component
-Render the `Notestamp` component and pass the `editor` as a prop. Additional props allow you to listen for events, customize the UI, and define stamp behavior.
+#### `clear() => void`
+Clears the editor’s content.
+
+## Notestamp component
 
 ### Props
+It takes as props, any props defined by Slate's [Editable](https://docs.slatejs.org/libraries/slate-react/editable) component except `renderElement` and `renderLeaf`. 
 
-- `editor`:  Expects the `editor` object returned by `useEditor`.
+You **must** pass the following props:
 
-- `onStampInsert`: Called when the `Enter` key is pressed. Receives `dateEnterKeyPressed` (a `Date` object) as an argument and should return an object `{ label: string, value: any }`. The `label` is displayed inside the stamp, and `value` holds the stamp’s state. Returning `null` for `value` cancels the insertion.
+#### `editor: Editor`
+Expects the `editor` object returned by `useEditor`.
 
-- `onStampClick`: A callback function that executes when a stamp is clicked. Receives `label: string` and `value: any` as arguments.
+#### `onStampInsert: (requestedAt: Date) => { value: any, label: string } | null`
+Executes when the user types on an empty line, right before a stamp is inserted. The `requestedAt` argument provides the timestamp of this event.  
 
-- `placeholder`: Sets a custom placeholder text. Pass a string to override the default or `false` to disable it.
+Return an object with `{ value, label }` to define the stamp's content:
 
-- `toolbarBackgroundColor`: Sets the toolbar’s background color.
+-   `value` holds the underlying data (e.g., a precise timestamp or identifier).  
+-   `label` is a human-readable string displayed inside the stamp (often a formatted version of `value`).
 
-- `borderColor`, `borderSize`, `borderStyle`: Customize the color, thickness, and style of the editor’s border, including the separator between the toolbar and the text area.
+**Note** :  If `null` is returned or the `value` property evaluates to `null`, then a stamp will not be inserted.
 
-- `onChange`: A callback function that executes when the editor’s content changes. Receives `value: Node[]`, representing the updated content.
+#### `onStampClick(label: string, value: any) => void`
+Executes when a stamp is clicked. Receives `label: string` and `value: any` as arguments i.e. the data stored by the stamp.
+
+## Hooks
+#### `useEditor() => Editor`
+Returns an editor object with the method augmentations mentioned above.
+
+#### `useFormatActiveState(editor: Editor, format: keyof Format) => [boolean]`
+Returns an array with one state variable indicating the active state of the specified text format at the current selection. This is particularly useful for implementing a toolbar that reflects the formatting state.
+
+## Format class
+`Format` is a utility class that houses all available text formats as properties as well as a method to toggle them.
+
+### Properties:
+
+- `bold`
+- `italic`
+- `underline`
+- `code` (plain text)
+- `orderedList` (numbered list)
+- `unorderedList` (bulleted list)
+
+### Methods:
+
+#### `toggleFormat(editor: Editor, format: keyof Format)`
+Toggles the formatting specified text format at the current selection.
+
+
+## FAQ
+- **Where can I find example code on how to use this library?**
+
+An example project with toolbar and keyboard shortcut implementations is available in the `example/` directory. To run it locally:
+	
+ 1. Clone this repository.
+ 2. Run `npm install` in the root directory.
+ 3. Navigate to the `example/` folder.
+ 4. Run `npm install` and then `npm start`.
+
+- **Can this text-editor handle anything other than text, such as images?**
+
+Currently, it's not available. However, I will soon release the stamp functionality as a [Slate plugin](https://docs.slatejs.org/concepts/08-plugins) for you to integrate into your custom text editor built with [Slate](https://docs.slatejs.org/).
+
+- **What if I don't need rich-text formatting?**
+
+That's fine. By default, the editor doesn't provide a UI or keyboard shortcuts to toggle formatting.
+
 
 ## Credits
 

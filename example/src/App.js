@@ -1,67 +1,94 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from "react"
 
-import { Notestamp, useEditor } from 'notestamp'
+import { Notestamp, Format, useEditor } from "notestamp"
+import { Toolbar } from "./components/Toolbar/Toolbar"
+import isHotkey from "is-hotkey"
 
 const App = () => {
-  const [count, setCount] = useState(0)
   const [editorContent, setEditorContent] = useState(null)
-  const [stampData, setStampData] = useState(null)
+  const [count, setCount] = useState(0)
+
+  const setStampData = () => {
+    setCount(c => c + 1)
+    if (count % 5 === 0) {
+      return null
+    }
+    return { label: count.toString(), value: count }
+  }
+
+  const handleLogStampData = (label, val) => {
+    console.log(`clicked: ${label}, ${val}`)
+  }
 
   const { editor } = useEditor()
 
-  useEffect(() => {
-    handleCaptureEditorContent()
-  }, [])
+  const formatHotkeys = {
+    "mod+shift+8": Format.orderedList,
+    "mod+shift+9": Format.unorderedList,
+    "mod+b": Format.bold,
+    "mod+i": Format.italic,
+    "mod+u": Format.underline,
+    "mod+`": Format.code,
+  }
 
-  // Set the label (type: string) and value (type: any) of the new stamp
-  const onStampInsert = () => {
-    setCount(n => n + 1)
-
-    return {
-      label: count.toString(),
-      value: count
+  const handleKeyDown = event => {
+    switch (event.key) {
+      case "Tab":
+        event.preventDefault()
+        editor.insertText("\t")
+        break
+      default:
+        for (const [hotkey, format] of Object.entries(formatHotkeys)) {
+          if (isHotkey(hotkey, event)) {
+            event.preventDefault()
+            Format.toggle(editor, format)
+            return
+          }
+        }
     }
   }
 
-  // Define action to take when a stamp is clicked
-  const onStampClick = (label, _) => setStampData(label)
-
-  // Save the current content of the editor
-  const handleCaptureEditorContent = () => {
+  const handleCaptureEditorContent = useCallback(() => {
     setEditorContent(editor.getChildren())
-  }
+  }, [editor, setEditorContent])
 
-  // Set editor's content to the previously saved contents
+  useEffect(() => {
+    handleCaptureEditorContent()
+  }, [handleCaptureEditorContent, setEditorContent])
+
   const handleRestoreEditorContent = () => {
     editorContent && editor.setChildren(editorContent)
   }
 
   return (
-    <div style={{ margin: '5px', padding: '0', height: '300px' }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        margin: "5px",
+        gap: "5px",
+      }}
+    >
+      <Toolbar editor={editor} style={{ border: "1px solid lightgrey" }} />
       <Notestamp
         editor={editor}
-        onStampInsert={onStampInsert}
-        onStampClick={onStampClick}
-        borderSize='1px'
-        borderColor='lightgray'
-        borderStyle='solid'
-        toolbarBackgroundColor='whitesmoke'
+        onStampInsert={setStampData}
+        onStampClick={handleLogStampData}
+        onKeyDown={handleKeyDown}
+        style={{
+          height: "300px",
+          border: "1px solid lightgrey",
+        }}
       />
-      <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+      <div style={{ display: "flex", gap: "10px" }}>
         <button onClick={handleCaptureEditorContent}>
           Capture editor content
         </button>
         <button onClick={handleRestoreEditorContent}>
           Restore last captured content
         </button>
-        <button 
-          onClick={editor.clear}>
-          Clear editor
-        </button>
+        <button onClick={editor.clear}>Clear editor</button>
       </div>
-      <pre style={{ marginTop: '10px' }}>
-        { `Last stamp clicked: ${stampData}` }
-      </pre>
     </div>
   )
 }
