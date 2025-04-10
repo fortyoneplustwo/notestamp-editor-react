@@ -25,19 +25,19 @@ import React, { useRef } from 'react'
 import { Notestamp, useEditor } from 'notestamp'
 
 const App = () => {
-	const { editor } = useEditor()
-	
-	const setStampData = requestedAt => {
-	  return { label: 'three', value: 3 }
-	}
+  const { editor } = useEditor()
 
-	const printStampLabel = (label, value) => {
-		console.log(`Clicked stamp: ${label, value}`)
-	}
+  const setStampData = requestedAt => {
+    return { label: 'three', value: 3 }
+  }
 
-	return (
-	  <Notestamp
-		  editor={editor}
+  const printStampLabel = (label, value) => {
+    console.log(`Clicked stamp: ${label, value}`)
+  }
+
+  return (
+    <Notestamp
+      editor={editor}
       onStampInsert={setStampData}
       onStampClick={printStampLabel}
     />
