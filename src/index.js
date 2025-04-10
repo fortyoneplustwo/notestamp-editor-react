@@ -14,6 +14,7 @@ const Notestamp = ({
   editor: baseEditor,
   onStampInsert,
   onStampClick,
+  onChange,
   style,
   ...props
 }) => {
@@ -151,7 +152,16 @@ const Notestamp = ({
   const renderLeaf = useCallback(props => <Leaf {...props} />, [])
 
   return (
-    <Slate editor={editor} initialValue={initialValue}>
+    <Slate
+      editor={editor}
+      initialValue={initialValue}
+      onChange={value => {
+        const isAstChange = editor.operations.some(
+          op => "set_selection" !== op.type
+        )
+        isAstChange && onChange && onChange(value)
+      }}
+    >
       <Editable
         style={{
           tabSize: "4",
