@@ -12,6 +12,7 @@
   "dependencies": {
     "@emotion/css": "^11.11.2",
     "jspdf": "^2.5.1",
+    "lucide-react": "^0.487.0",
     "notestamp": "file:..",
     "react": "file:../node_modules/react",
     "react-dom": "file:../node_modules/react-dom",
