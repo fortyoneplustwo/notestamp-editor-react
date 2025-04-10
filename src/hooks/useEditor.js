@@ -9,8 +9,6 @@ import {
   Range,
   Point,
 } from "slate"
-import { withHistory } from "slate-history"
-import { withReact } from "slate-react"
 import { getLines, linesToString } from "../utils/lines"
 
 export const useEditor = () => {
@@ -148,10 +146,13 @@ export const useEditor = () => {
         focus: Editor.end(editor, []),
       },
     })
-    Transforms.insertNodes(editor, {
-      type: "paragraph",
-      children: [{ text: "" }],
+    Transforms.delete(editor, {
+      at: {
+        anchor: Editor.start(editor, []),
+        focus: Editor.end(editor, []),
+      },
     })
+    Transforms.setSelection(editor, Editor.start(editor, []))
   }
 
   return { editor }
