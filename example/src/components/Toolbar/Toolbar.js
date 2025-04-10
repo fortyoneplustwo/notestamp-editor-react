@@ -1,41 +1,56 @@
 import React from "react"
-import { Menu, Button, Icon } from "./components/ToolbarComponents"
 import { cx, css } from "@emotion/css"
 import { Format, useFormatActiveState } from "notestamp"
+import { Bold, Italic, Underline, Code, ListOrdered, List } from "lucide-react"
 
 export const Toolbar = ({ className, editor, ...props }) => {
-  const FormatButton = ({ format, icon, ...props }) => {
+  const FormatButton = ({ format, icon, className, ...props }) => {
     const [isActive] = useFormatActiveState(editor, format)
+    const Icon = icon
     return (
-      <Button
+      <span
         {...props}
-        active={isActive}
         onMouseDown={event => {
           event.preventDefault()
           Format.toggle(editor, format)
         }}
+        className={cx(
+          className,
+          css`
+            cursor: pointer;
+            color: ${isActive ? "orangered" : "#ccc"};
+          `
+        )}
       >
-        <Icon>{icon}</Icon>
-      </Button>
+        <Icon size={16} />
+      </span>
     )
   }
 
   return (
-    <Menu
+    <div
       {...props}
       className={cx(
         className,
         css`
           padding: 10px;
+
+          & > * {
+            display: inline-block;
+          }
+
+          & > * + * {
+            margin-left: 15px;
+          }
         `
       )}
     >
-      <FormatButton format={Format.bold} icon="format_bold" />
-      <FormatButton format={Format.italic} icon="format_italic" />
-      <FormatButton format={Format.uderline} icon="format_underlined" />
-      <FormatButton format={Format.code} icon="code" />
-      <FormatButton format={Format.orderedList} icon="format_list_numbered" />
-      <FormatButton format={Format.unorderedList} icon="format_list_bulleted" />
-    </Menu>
+      <FormatButton format={Format.bold} icon={Bold} />
+      <FormatButton format={Format.italic} icon={Italic} />
+      <FormatButton format={Format.uderline} icon={Underline} />
+      <FormatButton format={Format.code} icon={Code} />
+      <FormatButton format={Format.orderedList} icon={ListOrdered} />
+      <FormatButton format={Format.unorderedList} icon={List} />
+    </div>
   )
 }

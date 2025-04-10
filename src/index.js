@@ -1,4 +1,3 @@
-import "material-icons/iconfont/material-icons.css"
 import React, { useMemo, useCallback, useState } from "react"
 import { Slate, Editable, withReact } from "slate-react"
 import { Editor, Element as SlateElement, Point, Transforms } from "slate"
@@ -151,7 +150,6 @@ const Notestamp = ({
     <Slate
       editor={editor}
       initialValue={initialValue}
-      }}
     >
       <Editable
         style={{
