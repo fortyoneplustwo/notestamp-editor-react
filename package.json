@@ -24,7 +24,11 @@
     "deploy": "gh-pages -d example/build"
   },
   "peerDependencies": {
-    "react": "^18.0.0"
+    "react": "^18.0.0",
+    "react-dom": "^18.2.0",
+    "slate": "^0.103.0",
+    "slate-history": "^0.100.0",
+    "slate-react": "^0.104.0"
   },
   "devDependencies": {
     "cross-env": "^7.0.2",
@@ -45,17 +49,15 @@
     "postcss-normalize": "^10.0.1",
     "postcss-preset-env": "^9.5.13",
     "prettier": "^2.0.4",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-scripts": "^3.0.1"
+    "react-scripts": "^3.0.1",
+    "@types/react": "^18.3.2",
+    "@types/react-dom": "^18.3.0"
   },
   "files": [
     "dist"
   ],
   "dependencies": {
     "@emotion/css": "^11.11.2",
-    "@types/react": "^18.3.2",
-    "@types/react-dom": "^18.3.0",
     "is-hotkey": "^0.2.0",
     "slate": "^0.103.0",
     "slate-history": "^0.100.0",
