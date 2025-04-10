@@ -36,12 +36,12 @@ const App = () => {
 	}
 
 	return (
-	    <Notestamp
-		editor={editor}
-	        onStampInsert={setStampData}
-	        onStampClick={printStampLabel}
-	    />
-	)
+	  <Notestamp
+		  editor={editor}
+      onStampInsert={setStampData}
+      onStampClick={printStampLabel}
+    />
+  )
 }
 ```
 
