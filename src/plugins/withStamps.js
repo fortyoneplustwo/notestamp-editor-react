@@ -29,7 +29,7 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
         `}
       >
         <span
-          onClick={() => onStampClick.current?.(element.label, element.value)}
+          onClick={() => onStampClick(element.label, element.value)}
           contentEditable={false}
           className={css`
             display: inline-block;
@@ -139,7 +139,7 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
       })
     }
 
-    const stampData = onStampInsert.current?.()
+    const stampData = onStampInsert()
     const children =
       stampData && stampData?.value !== null
         ? [
@@ -178,7 +178,7 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
     const [block, blockPath] = match
 
     if (block.type !== stampedBlockType && isBlockEmpty(block)) {
-      const stampData = onStampInsert.current?.()
+      const stampData = onStampInsert()
       if (stampData && stampData.value !== null) {
         Transforms.insertNodes(
           editor,

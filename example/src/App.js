@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback, useRef } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 
-import { Notestamp, Format, useEditor } from "notestamp"
+import { Notestamp, Format, useEditor, useStableFn } from "notestamp"
 import { Toolbar } from "./components/Toolbar/Toolbar"
 import isHotkey from "is-hotkey"
 
@@ -8,7 +8,7 @@ const App = () => {
   const [editorContent, setEditorContent] = useState(null)
   const [count, setCount] = useState(0)
 
-  const setStampData = useCallback(() => {
+  const setStampData = useStableFn(() => {
     setCount(c => c + 1)
     if (count % 5 === 0) {
       return null
@@ -16,21 +16,10 @@ const App = () => {
     return { label: count.toString(), value: count }
   }, [count])
 
-  const handleLogStampData = useCallback(
+  const handleLogStampData = useStableFn(
     (label, val) => console.log(`clicked: ${label}, ${val}`),
     []
   )
-
-  const setStampDataRef = useRef(setStampData)
-  const handleLogStampDataRef = useRef(handleLogStampData)
-
-  useEffect(() => {
-    setStampDataRef.current = setStampData
-  }, [setStampData])
-
-  useEffect(() => {
-    handleLogStampDataRef.current = handleLogStampData
-  }, [handleLogStampData])
 
   const { editor } = useEditor()
 
@@ -60,7 +49,6 @@ const App = () => {
     }
   }
 
-  // Save the current content of the editor
   const handleCaptureEditorContent = useCallback(() => {
     setEditorContent(editor.getChildren())
   }, [editor, setEditorContent])
@@ -69,7 +57,6 @@ const App = () => {
     handleCaptureEditorContent()
   }, [handleCaptureEditorContent, setEditorContent])
 
-  // Set editor's content to the previously saved contents
   const handleRestoreEditorContent = () => {
     editorContent && editor.setChildren(editorContent)
   }
@@ -86,8 +73,8 @@ const App = () => {
       <Toolbar editor={editor} style={{ border: "1px solid lightgrey" }} />
       <Notestamp
         editor={editor}
-        onStampInsert={setStampDataRef}
-        onStampClick={handleLogStampDataRef}
+        onStampInsert={setStampData}
+        onStampClick={handleLogStampData}
         onKeyDown={handleKeyDown}
         style={{
           height: "300px",

@@ -8,6 +8,7 @@ import { withLists } from "./plugins/withLists"
 import { withMarks } from "./plugins/withMarks"
 import { withHistory } from "slate-history"
 import { Format } from "./utils/format"
+import { useStableFn } from "./hooks/useStableFn"
 
 const Notestamp = ({
   editor: baseEditor,
@@ -147,10 +148,7 @@ const Notestamp = ({
   const renderLeaf = useCallback(props => <Leaf {...props} />, [])
 
   return (
-    <Slate
-      editor={editor}
-      initialValue={initialValue}
-    >
+    <Slate editor={editor} initialValue={initialValue}>
       <Editable
         style={{
           tabSize: "4",
@@ -170,4 +168,4 @@ const Notestamp = ({
   )
 }
 
-export { Notestamp, Format, useEditor, useFormatActiveState }
+export { Notestamp, Format, useEditor, useFormatActiveState, useStableFn }
