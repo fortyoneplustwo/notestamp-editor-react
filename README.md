@@ -36,8 +36,8 @@ const App = () => {
 	}
 
 	return (
-	    <Notestamp 
-		    editor={editor}
+	    <Notestamp
+		editor={editor}
 	        onStampInsert={setStampData}
 	        onStampClick={printStampLabel}
 	    />
