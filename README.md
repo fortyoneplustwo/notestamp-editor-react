@@ -120,10 +120,11 @@ Toggles the formatting specified text format at the current selection.
 - **Where can I find example code on how to use this library?**
 
 An example project with toolbar and keyboard shortcut implementations is available in the `example/` directory. To run it locally:
-	1. Clone this repository.
-    2. Run `npm install` in the root directory.
-    3. Navigate to the `example/` folder.
-    4. Run `npm install` and then `npm start`.
+	
+ 1. Clone this repository.
+ 2. Run `npm install` in the root directory.
+ 3. Navigate to the `example/` folder.
+ 4. Run `npm install` and then `npm start`.
 
 - **Can this text-editor handle anything other than text, such as images?**
 
