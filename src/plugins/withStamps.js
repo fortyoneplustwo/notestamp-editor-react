@@ -139,7 +139,7 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
       })
     }
 
-    const stampData = onStampInsert()
+    const stampData = onStampInsert(new Date())
     const children =
       stampData && stampData?.value !== null
         ? [
@@ -179,7 +179,7 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
     const [block, blockPath] = match
 
     if (block.type !== stampedBlockType && isBlockEmpty(block)) {
-      const stampData = onStampInsert()
+      const stampData = onStampInsert(new Date())
       if (stampData && stampData.value !== null) {
         Transforms.insertNodes(
           editor,

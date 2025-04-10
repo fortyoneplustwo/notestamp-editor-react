@@ -8,7 +8,7 @@ const App = () => {
   const [editorContent, setEditorContent] = useState(null)
   const [count, setCount] = useState(0)
 
-  const setStampData = () => {
+  const setStampData = _ => {
     setCount(c => c + 1)
     if (count % 5 === 0) {
       return null
