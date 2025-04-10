@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react"
 
-import { Notestamp, Format, useEditor, useStableFn } from "notestamp"
+import { Notestamp, Format, useEditor } from "notestamp"
 import { Toolbar } from "./components/Toolbar/Toolbar"
 import isHotkey from "is-hotkey"
 
@@ -8,18 +8,17 @@ const App = () => {
   const [editorContent, setEditorContent] = useState(null)
   const [count, setCount] = useState(0)
 
-  const setStampData = useStableFn(() => {
+  const setStampData = () => {
     setCount(c => c + 1)
     if (count % 5 === 0) {
       return null
     }
     return { label: count.toString(), value: count }
-  }, [count])
+  }
 
-  const handleLogStampData = useStableFn(
-    (label, val) => console.log(`clicked: ${label}, ${val}`),
-    []
-  )
+  const handleLogStampData = (label, val) => {
+    console.log(`clicked: ${label}, ${val}`)
+  }
 
   const { editor } = useEditor()
 

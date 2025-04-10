@@ -17,13 +17,16 @@ const Notestamp = ({
   style,
   ...props
 }) => {
+  const stableOnStampInsert = useStableFn(onStampInsert, [])
+  const stableOnStampClick = useStableFn(onStampClick, [])
+
   const [editor] = useState(() =>
     withMarks(
       withLists(
         withStamps(
           withReact(withHistory(baseEditor)),
-          onStampInsert,
-          onStampClick
+          stableOnStampInsert,
+          stableOnStampClick
         )
       )
     )
@@ -168,4 +171,4 @@ const Notestamp = ({
   )
 }
 
-export { Notestamp, Format, useEditor, useFormatActiveState, useStableFn }
+export { Notestamp, Format, useEditor, useFormatActiveState }
