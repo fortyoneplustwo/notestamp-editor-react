@@ -113,7 +113,7 @@ Returns an array with one state variable indicating the active state of the spec
 ### Methods:
 
 #### `toggleFormat(editor: Editor, format: keyof Format)`
-Toggles the formatting specified text format at the current selection.
+Toggles the specified text format at the current selection.
 
 
 ## FAQ
