@@ -168,6 +168,7 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
   }
 
   editor.insertText = text => {
+    if (Range.isExpanded(editor.selection)) editor.deleteFragment()
     const marks = Editor.marks(editor)
     const match = getWrappingBlock(editor)
     if (!match)
