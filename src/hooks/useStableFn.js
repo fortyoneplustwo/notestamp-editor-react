@@ -13,5 +13,5 @@ export const useStableFn = (fn, deps) => {
   const fnRef = useRef(fn)
   fnRef.current = fn
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  return useCallback(() => fnRef.current(), deps)
+  return useCallback((...args) => fnRef.current(...args), deps)
 }
