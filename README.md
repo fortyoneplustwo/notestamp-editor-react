@@ -118,6 +118,7 @@ Toggles the formatting specified text format at the current selection.
 
 ## FAQ
 - **Where can I find example code on how to use this library?**
+
 An example project with toolbar and keyboard shortcut implementations is available in the `example/` directory. To run it locally:
 	1. Clone this repository.
     2. Run `npm install` in the root directory.
@@ -125,10 +126,12 @@ An example project with toolbar and keyboard shortcut implementations is availab
     4. Run `npm install` and then `npm start`.
 
 - **Can this text-editor handle anything other than text, such as images?**
+
 Currently, it's not available. However, I will soon release the stamp functionality as a [Slate plugin](https://docs.slatejs.org/concepts/08-plugins) for you to integrate into your custom text editor built with [Slate](https://docs.slatejs.org/).
 
 - **What if I don't need rich-text formatting?**
-That's fine. By default, the editor doesn't provide a UI or keyboard shortcuts for formatting. You will need to implement these features yourself.
+
+That's fine. By default, the editor doesn't provide a UI or keyboard shortcuts to toggle formatting.
 
 
 ## Credits
