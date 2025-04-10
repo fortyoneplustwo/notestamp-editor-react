@@ -1,6 +1,6 @@
 ## Description
 
-A React rich-text editor that syncs text with any entity using clickable "stamps."
+A rich-text editor library for React that syncs text with any entity using clickable "stamps."
 
 When the user inputs text on an empty line, a stamp is automatically inserted at the beginning of the line. Each stamp can hold custom state and trigger a function when clicked.
 
