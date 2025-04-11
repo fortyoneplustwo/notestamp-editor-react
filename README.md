@@ -1,8 +1,8 @@
 ## Description
 
-A rich-text editor library for React that syncs text with any entity using clickable "stamps."
+A rich-text editor library for React that syncs text entries with any entity using clickable stamps.
 
-When the user inputs text on an empty line, a stamp is automatically inserted at the beginning of the line. Each stamp can hold custom state and trigger a function when clicked.
+When the user inputs text on an empty line, a stamp is automatically inserted at the beginning of the line. Stamps can hold arbitrary state and trigger a function when clicked.
 
 ## Why?
 - You need a textbox that can synchronize to an entity.
@@ -119,12 +119,11 @@ Toggles the specified text format at the current selection.
 ## FAQ
 - **Where can I find example code on how to use this library?**
 
-An example project with toolbar and keyboard shortcut implementations is available in the `example/` directory. To run it locally:
+An example project that includes a toolbar and keyboard shortcut implementations available in the `example/` directory. To run it locally:
 	
  1. Clone this repository.
- 2. Run `npm install` in the root directory.
- 3. Navigate to the `example/` folder.
- 4. Run `npm install` and then `npm start`.
+ 2. Navigate to the `example/` folder.
+ 3. Run `pnpm install` and then `pnpm run dev`.
 
 - **Can this text-editor handle anything other than text, such as images?**
 
