@@ -276,6 +276,8 @@ export const withStamps = (editor, onStampInsert, onStampClick) => {
         focus: Editor.end(editor, unstampedAncestorPathAtSelectionStart),
       },
     })
+
+    Transforms.collapse(editor, { edge: "start" })
   }
 
   editor.deleteBackward = (...args) => {
