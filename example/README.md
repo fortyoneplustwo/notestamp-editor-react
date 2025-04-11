@@ -1,5 +1,5 @@
-This example was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This example was created with [Vite](https://vitejs.dev/) + [React](https://reactjs.org/).
 
 It is linked to the notestamp package in the parent directory for development purposes.
 
-You can run `npm install` and then `npm start` to test your package.
+You can run `pnpm install` and then `pnpm run dev` to test your package.
