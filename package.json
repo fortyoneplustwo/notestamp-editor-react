@@ -1,6 +1,6 @@
 {
   "name": "notestamp",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "A rich-text editor library for React that syncs text to any entity",
   "author": "fortyoneplustwo",
   "license": "MIT",
