@@ -1,6 +1,6 @@
 {
   "name": "notestamp",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "A rich-text editor library for React that syncs text to any entity",
   "author": "fortyoneplustwo",
   "license": "MIT",
@@ -8,7 +8,7 @@
     "type": "git",
     "url": "git+https://github.com/fortyoneplustwo/notestamp-editor-react.git"
   },
-   "main": "dist/index.cjs.js",
+  "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
   "source": "src/index.jsx",
   "exports": {
